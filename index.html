@@ -3,333 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aeon VARC Trainer</title>
+    <title>VARC Trainer</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="/src/style.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        serif: ['Merriweather', 'serif'],
-                    },
-                    colors: {
-                        'paper': '#f9f7f1', // Classic reader background
-                        'ink': '#2c2c2c',   // Softer black
-                    }
-                }
-            }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        /* Hide scrollbar for clean UI */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .bionic b { font-weight: 700; color: #000; }
-        /* Reader focus line */
-        .rsvp-focus-line { position: absolute; top: 0; left: 50%; height: 100%; width: 2px; background-color: rgba(220, 38, 38, 0.1); transform: translateX(-50%); }
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+        .font-serif { font-family: 'Merriweather', serif; }
+        .rsvp-highlight { color: #dc2626; font-weight: bold; }
     </style>
 </head>
-<body class="bg-paper text-ink min-h-screen flex flex-col antialiased selection:bg-yellow-200 selection:text-black">
+<body class="p-4 md:p-8 max-w-4xl mx-auto">
 
-    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-2 cursor-pointer" onclick="goHome()">
-                <div class="w-8 h-8 bg-black text-white rounded flex items-center justify-center font-serif font-bold text-lg">A</div>
-                <span class="font-bold text-lg tracking-tight">VARC<span class="text-gray-500 font-normal">Trainer</span></span>
-            </div>
-            <div id="status-bar" class="text-xs font-medium text-gray-400 uppercase tracking-wide">Syncing...</div>
+    <div class="mb-8 flex justify-between items-end border-b pb-4">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900">VARC Trainer</h1>
+            <p id="meta-info" class="text-sm text-gray-500 mt-1">Status: Initializing...</p>
         </div>
-    </nav>
+        <button onclick="location.reload()" class="text-sm bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">Refresh</button>
+    </div>
 
-    <main class="flex-grow max-w-3xl mx-auto w-full p-6 mt-8">
-        
-        <div id="view-dashboard" class="animate-fade-in">
-            <div class="mb-12 text-center space-y-4">
-                <span class="bg-black text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Daily Pick</span>
-                <h1 id="essay-title" class="text-4xl md:text-5xl font-serif font-black leading-tight text-gray-900">
-                    Loading Essay...
-                </h1>
-                <p id="essay-meta" class="text-gray-500 italic">Curating content from Aeon.co</p>
-                <a id="source-link" href="#" target="_blank" class="hidden text-sm text-indigo-600 hover:text-indigo-800 underline decoration-1 underline-offset-4">Read Original Source</a>
-            </div>
+    <div id="loader" class="text-center py-20">
+        <div class="text-2xl font-bold text-gray-400 animate-pulse">Loading Content...</div>
+        <p class="text-xs text-gray-400 mt-2">Fetching data.json</p>
+    </div>
 
-            <div id="passage-list" class="grid gap-6">
-                <div class="p-8 text-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
-                    Fetching data from repository...
-                </div>
-            </div>
+    <div id="error-box" class="hidden bg-red-50 border border-red-200 text-red-800 p-6 rounded-lg text-center">
+        <h3 class="font-bold text-lg">Something went wrong</h3>
+        <p id="error-msg" class="mt-2 text-sm"></p>
+    </div>
+
+    <div id="app-content" class="hidden">
+        <div id="view-dashboard">
+            <h2 id="essay-title" class="text-2xl font-serif font-bold mb-6 text-gray-800">Title Here</h2>
+            <div id="passages-grid" class="grid gap-4"></div>
         </div>
 
         <div id="view-reader" class="hidden">
-            <div class="sticky top-20 z-40 mb-8 flex justify-between items-center bg-white p-2 rounded-full shadow-lg border border-gray-100 mx-auto max-w-xl">
-                <button onclick="goHome()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition" title="Back">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                </button>
-                
-                <div class="flex gap-1 bg-gray-100 p-1 rounded-full">
-                    <button onclick="setMode('normal')" id="btn-normal" class="px-4 py-1.5 text-sm font-medium rounded-full bg-white shadow-sm transition">Read</button>
-                    <button onclick="setMode('bionic')" id="btn-bionic" class="px-4 py-1.5 text-sm font-medium rounded-full text-gray-500 hover:text-gray-900 transition">Bionic</button>
-                    <button onclick="setMode('rsvp')" id="btn-rsvp" class="px-4 py-1.5 text-sm font-medium rounded-full text-gray-500 hover:text-gray-900 transition">Speed</button>
-                </div>
-
-                <div class="w-10"></div> </div>
-
-            <div id="rsvp-controls" class="hidden mb-8 flex-col items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <div class="text-6xl font-serif font-bold h-32 flex items-center justify-center w-full relative" id="rsvp-display-area">
-                    <div class="rsvp-focus-line"></div>
-                    <span id="rsvp-word" class="z-10 bg-white px-2">Ready</span>
-                </div>
-                <div class="flex items-center gap-4 w-full max-w-sm">
-                    <span class="text-xs font-bold text-gray-400">SLOW</span>
-                    <input type="range" min="200" max="600" step="50" value="300" id="wpm-slider" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black">
-                    <span class="text-xs font-bold text-gray-400">FAST</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span id="wpm-display" class="font-mono text-sm font-bold bg-gray-100 px-2 py-1 rounded">300 WPM</span>
-                    <button onclick="toggleRSVP()" id="rsvp-play-btn" class="bg-black text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-800 transition">Start</button>
-                </div>
-            </div>
-
-            <article id="reading-container" class="prose prose-lg prose-slate max-w-none font-serif text-gray-800 leading-relaxed">
-                <div id="text-display" class="bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-gray-100">
-                    </div>
-            </article>
-
-            <div class="mt-12 text-center pb-12">
-                <button onclick="finishReading()" class="group relative inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-500/30">
-                    <span>Take Comprehension Quiz</span>
-                    <svg class="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                </button>
-            </div>
-        </div>
-
-        <div id="view-quiz" class="hidden max-w-2xl mx-auto">
-            <div class="mb-8 border-b border-gray-200 pb-4">
-                <h2 class="text-3xl font-serif font-bold text-gray-900">Review</h2>
-                <p class="text-gray-500 mt-2">Test your understanding of the passage.</p>
-            </div>
+            <button onclick="showDashboard()" class="mb-4 text-sm text-gray-500 hover:text-black">&larr; Back</button>
             
-            <div id="quiz-container" class="space-y-8">
+            <div class="sticky top-4 bg-white z-10 p-2 shadow rounded-lg border flex gap-2 justify-between items-center mb-6">
+                <div class="flex gap-2">
+                    <button onclick="setMode('normal')" class="px-3 py-1 text-sm bg-black text-white rounded">Read</button>
+                    <button onclick="setMode('rsvp')" class="px-3 py-1 text-sm bg-gray-200 rounded">Speed</button>
+                </div>
+                <div id="rsvp-controls" class="hidden items-center gap-2">
+                    <input type="range" min="200" max="600" step="50" value="300" id="wpm-slider" class="w-24">
+                    <span id="wpm-val" class="text-xs font-mono">300</span>
+                    <button onclick="toggleRSVP()" id="rsvp-btn" class="text-xs bg-red-600 text-white px-2 py-1 rounded">START</button>
+                </div>
+            </div>
+
+            <div id="reader-area" class="bg-white p-6 md:p-10 rounded-xl shadow-sm border min-h-[300px] font-serif text-lg leading-relaxed text-gray-800">
                 </div>
 
-            <div class="mt-12 border-t pt-8 flex justify-between items-center pb-12">
-                <button onclick="goHome()" class="text-gray-500 hover:text-black font-medium transition flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                    Back to Dashboard
-                </button>
-                <button onclick="goHome()" class="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 transition">Next Passage</button>
-            </div>
+            <button onclick="startQuiz()" class="w-full mt-8 bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700">Take Quiz</button>
         </div>
 
-    </main>
+        <div id="view-quiz" class="hidden">
+            <h2 class="text-xl font-bold mb-6">Comprehension Check</h2>
+            <div id="quiz-area" class="space-y-6"></div>
+            <button onclick="showDashboard()" class="mt-8 text-gray-500 underline">Back to Home</button>
+        </div>
+    </div>
 
     <script>
-        // --- APP LOGIC ---
-        let appData = null;
-        let currentPassageId = null;
-        let rsvpInterval = null;
-        let rsvpIndex = 0;
-        let rsvpRunning = false;
-        let wordsArray = [];
+        let data = null;
+        let currentIdx = 0;
+        let rsvpInterval, rsvpRunning = false, words = [], wordIdx = 0;
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // ADDED CACHE BUSTING (?t=...) to force load new JSON
-                const response = await fetch('data.json?t=' + new Date().getTime());
-                if (!response.ok) throw new Error("Data file missing");
-                
-                appData = await response.json();
-                
-                // Check if data is valid
-                if(!appData.passages || appData.passages.length === 0) {
-                   throw new Error("Data file is empty or corrupted.");
-                }
-
-                renderDashboard();
-            } catch (error) {
-                console.error(error);
-                document.getElementById('essay-title').innerText = "System Error";
-                document.getElementById('essay-meta').innerHTML = `<span class="text-red-500">Could not load content. The scraper might have failed.</span><br><span class="text-xs text-gray-400">${error.message}</span>`;
-            }
-        });
-
-        function renderDashboard() {
-            const date = new Date(appData.metadata.date_scraped).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            document.getElementById('status-bar').innerText = date;
-            document.getElementById('essay-title').innerText = appData.metadata.title;
-            document.getElementById('source-link').href = appData.metadata.source;
-            document.getElementById('source-link').classList.remove('hidden');
-
-            const list = document.getElementById('passage-list');
-            list.innerHTML = '';
-
-            appData.passages.forEach((p, index) => {
-                const wordCount = p.text.split(' ').length;
-                const readTime = Math.ceil(wordCount / 250); // Avg reading speed
-                
-                const card = document.createElement('div');
-                card.className = "group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer relative overflow-hidden";
-                card.onclick = () => loadPassage(index);
-                card.innerHTML = `
-                    <div class="absolute top-0 left-0 w-1 h-full bg-gray-100 group-hover:bg-black transition-colors"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="font-sans text-xs font-bold text-gray-400 uppercase tracking-wider">Passage ${index + 1}</span>
-                        <span class="text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded-md">${readTime} min read</span>
-                    </div>
-                    <p class="font-serif text-gray-600 line-clamp-3 leading-relaxed mb-6 group-hover:text-gray-900 transition-colors">
-                        ${p.text.substring(0, 150)}...
-                    </p>
-                    <div class="flex items-center text-indigo-600 font-bold text-sm group-hover:translate-x-1 transition-transform">
-                        Start Reading <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                    </div>
-                `;
-                list.appendChild(card);
+        // Force Cache Busting
+        fetch('data.json?t=' + Date.now())
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+                return res.json();
+            })
+            .then(json => {
+                data = json;
+                if (!data.passages || data.passages.length === 0) throw new Error("JSON file is empty or has no passages.");
+                initApp();
+            })
+            .catch(err => {
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('error-box').classList.remove('hidden');
+                document.getElementById('error-msg').innerText = err.message + " (Check GitHub Actions logs)";
             });
-        }
 
-        function loadPassage(index) {
-            currentPassageId = index;
-            showView('view-reader');
-            setMode('normal'); // Default to normal
-            window.scrollTo(0,0);
-        }
-
-        function showView(viewId) {
-            ['view-dashboard', 'view-reader', 'view-quiz'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            document.getElementById(viewId).classList.remove('hidden');
-        }
-
-        function goHome() {
-            stopRSVP();
-            showView('view-dashboard');
-        }
-
-        // --- READER MODES ---
-        function setMode(mode) {
-            const textDisplay = document.getElementById('text-display');
-            const rsvpControls = document.getElementById('rsvp-controls');
-            const rawText = appData.passages[currentPassageId].text;
+        function initApp() {
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('app-content').classList.remove('hidden');
             
-            // Buttons State
-            ['normal', 'bionic', 'rsvp'].forEach(m => {
-                const btn = document.getElementById(`btn-${m}`);
-                if(m === mode) {
-                    btn.classList.replace('text-gray-500', 'text-white');
-                    btn.classList.replace('bg-white', 'bg-black');
-                    btn.classList.remove('hover:text-gray-900');
-                } else {
-                    btn.classList.replace('text-white', 'text-gray-500');
-                    btn.classList.replace('bg-black', 'bg-white');
-                    btn.classList.add('hover:text-gray-900');
-                }
+            document.getElementById('meta-info').innerText = `Source: ${data.metadata.source}`;
+            document.getElementById('essay-title').innerText = data.metadata.title;
+
+            const grid = document.getElementById('passages-grid');
+            grid.innerHTML = '';
+            
+            data.passages.forEach((p, i) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-lg border hover:shadow-md cursor-pointer transition";
+                card.onclick = () => loadPassage(i);
+                card.innerHTML = `
+                    <div class="text-xs font-bold text-gray-400 uppercase">Passage ${i+1}</div>
+                    <div class="mt-2 text-gray-600 line-clamp-2 font-serif">${p.text.substring(0, 100)}...</div>
+                    <div class="mt-4 text-indigo-600 text-sm font-bold">Read Now &rarr;</div>
+                `;
+                grid.appendChild(card);
             });
-
-            stopRSVP();
-
-            if (mode === 'normal') {
-                textDisplay.classList.remove('hidden');
-                rsvpControls.classList.add('hidden');
-                textDisplay.innerHTML = `<p>${rawText.replace(/\n\n/g, '</p><p class="mt-4">')}</p>`;
-            } 
-            else if (mode === 'bionic') {
-                textDisplay.classList.remove('hidden');
-                rsvpControls.classList.add('hidden');
-                const bionicText = rawText.split(' ').map(w => {
-                    const mid = Math.ceil(w.length * 0.4);
-                    return `<b>${w.slice(0, mid)}</b>${w.slice(mid)}`;
-                }).join(' ');
-                textDisplay.innerHTML = `<p>${bionicText.replace(/\n\n/g, '</p><p class="mt-4">')}</p>`;
-            }
-            else if (mode === 'rsvp') {
-                textDisplay.classList.add('hidden');
-                rsvpControls.classList.remove('hidden');
-                rsvpControls.classList.add('flex');
-                wordsArray = rawText.replace(/\n/g, ' ').split(/\s+/).filter(w => w.length > 0);
-                rsvpIndex = 0;
-                document.getElementById('rsvp-word').innerText = "Press Start";
-            }
         }
 
-        // --- RSVP ENGINE ---
-        const wpmSlider = document.getElementById('wpm-slider');
-        
-        wpmSlider.oninput = function() {
-            document.getElementById('wpm-display').innerText = this.value + " WPM";
-            if(rsvpRunning) { stopRSVP(); startRSVP(); }
+        function loadPassage(idx) {
+            currentIdx = idx;
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-reader').classList.remove('hidden');
+            setMode('normal');
+        }
+
+        function showDashboard() {
+            stopRSVP();
+            document.getElementById('view-reader').classList.add('hidden');
+            document.getElementById('view-quiz').classList.add('hidden');
+            document.getElementById('view-dashboard').classList.remove('hidden');
+        }
+
+        function setMode(mode) {
+            stopRSVP();
+            const area = document.getElementById('reader-area');
+            const txt = data.passages[currentIdx].text;
+            
+            if (mode === 'normal') {
+                document.getElementById('rsvp-controls').classList.add('hidden');
+                area.innerHTML = txt.split('\n\n').map(p => `<p class="mb-4">${p}</p>`).join('');
+            } else {
+                document.getElementById('rsvp-controls').classList.remove('hidden');
+                area.innerHTML = '<div id="rsvp-word" class="text-5xl font-bold text-center py-20">Ready?</div>';
+                words = txt.split(/\s+/);
+                wordIdx = 0;
+            }
         }
 
         function toggleRSVP() {
             if (rsvpRunning) stopRSVP();
-            else startRSVP();
-        }
-
-        function startRSVP() {
-            if(rsvpIndex >= wordsArray.length) rsvpIndex = 0;
-            rsvpRunning = true;
-            document.getElementById('rsvp-play-btn').innerText = "Pause";
-            document.getElementById('rsvp-play-btn').classList.replace('bg-black', 'bg-red-600');
-            
-            const wpm = parseInt(wpmSlider.value);
-            const ms = 60000 / wpm;
-
-            rsvpInterval = setInterval(() => {
-                if (rsvpIndex >= wordsArray.length) {
-                    stopRSVP();
-                    return;
-                }
-                document.getElementById('rsvp-word').innerText = wordsArray[rsvpIndex];
-                rsvpIndex++;
-            }, ms);
+            else {
+                rsvpRunning = true;
+                const wpm = document.getElementById('wpm-slider').value;
+                document.getElementById('rsvp-btn').innerText = "STOP";
+                rsvpInterval = setInterval(() => {
+                    if (wordIdx >= words.length) { stopRSVP(); return; }
+                    document.getElementById('rsvp-word').innerText = words[wordIdx++];
+                }, 60000 / wpm);
+            }
         }
 
         function stopRSVP() {
             rsvpRunning = false;
             clearInterval(rsvpInterval);
-            document.getElementById('rsvp-play-btn').innerText = "Start";
-            document.getElementById('rsvp-play-btn').classList.replace('bg-red-600', 'bg-black');
+            if(document.getElementById('rsvp-btn')) document.getElementById('rsvp-btn').innerText = "START";
         }
 
-        // --- QUIZ ENGINE ---
-        function finishReading() {
-            stopRSVP();
-            const questions = appData.passages[currentPassageId].questions;
-            const container = document.getElementById('quiz-container');
-            container.innerHTML = '';
-
-            if(!questions || questions.length === 0) {
-                 container.innerHTML = `<div class="p-4 bg-yellow-50 text-yellow-800 rounded">AI could not generate questions for this passage. Try the next one.</div>`;
-                 showView('view-quiz');
-                 return;
+        function startQuiz() {
+            document.getElementById('view-reader').classList.add('hidden');
+            document.getElementById('view-quiz').classList.remove('hidden');
+            const qArea = document.getElementById('quiz-area');
+            qArea.innerHTML = '';
+            
+            const qs = data.passages[currentIdx].questions;
+            if(!qs || qs.length === 0) {
+                qArea.innerHTML = "<div>No questions available.</div>";
+                return;
             }
 
-            questions.forEach((q, i) => {
-                const el = document.createElement('div');
-                el.className = "bg-white p-6 md:p-8 rounded-xl border border-gray-100 shadow-sm";
-                let optionsHtml = q.options.map((opt, optIdx) => `
-                    <label class="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition border border-transparent hover:border-gray-200">
-                        <div class="flex h-5 items-center">
-                            <input type="radio" name="q-${i}" value="${optIdx}" class="h-4 w-4 border-gray-300 text-black focus:ring-black">
-                        </div>
-                        <span class="text-sm md:text-base text-gray-700 leading-relaxed">${opt}</span>
-                    </label>
-                `).join('');
-
-                el.innerHTML = `
-                    <h3 class="font-serif font-bold text-lg text-gray-900 mb-4">${i+1}. ${q.question}</h3>
-                    <div class="space-y-2 mb-6">${optionsHtml}</div>
-                    <div id="feedback-${i}" class="hidden p-4 rounded-lg text-sm bg-gray-50"></div>
-                    <button onclick="checkAnswer(${i}, ${q.correct_index})" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-wide">Check Answer</button>
+            qs.forEach((q, i) => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-6 rounded border";
+                div.innerHTML = `
+                    <p class="font-bold mb-4">${i+1}. ${q.question}</p>
+                    <div class="space-y-2">
+                        ${q.options.map((opt, oi) => `
+                            <button onclick="check(this, ${i}, ${oi})" class="block w-full text-left p-2 border rounded hover:bg-gray-50">${opt}</button>
+                        `).join('')}
+                    </div>
+                    <div id="fb-${i}" class="mt-4 text-sm hidden p-2 rounded"></div>
                 `;
-                container.appendChild(el);
+                qArea.appendChild(div);
             });
-            showView('view-quiz');
         }
 
-        function checkAnswer(qIdx, correctIdx) {
-            const selected = document.querySelector(`input[name="q-${q
+        function check(btn, qIdx, optIdx) {
+            const q = data.passages[currentIdx].questions[qIdx];
+            const fb = document.getElementById(`fb-${qIdx}`);
+            fb.classList.remove('hidden');
+            
+            if (optIdx === q.correct_index) {
+                fb.className = "mt-4 text-sm p-2 rounded bg-green-100 text-green-800";
+                fb.innerText = "Correct! " + q.explanation;
+            } else {
+                fb.className = "mt-4 text-sm p-2 rounded bg-red-100 text-red-800";
+                fb.innerText = "Wrong. " + q.explanation;
+            }
+        }
+        
+        document.getElementById('wpm-slider').oninput = function() {
+            document.getElementById('wpm-val').innerText = this.value;
+        }
+    </script>
+</body>
+</html>
