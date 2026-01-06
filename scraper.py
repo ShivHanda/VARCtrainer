@@ -54,7 +54,7 @@ def scrape_text_from_url(url):
 
 def generate_analysis_real(text_chunk):
     """Generates Questions, Tone, and Summary using Gemini."""
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     
     prompt = f"""
     You are a CAT (Common Admission Test) Exam Setter. Analyze this text.
