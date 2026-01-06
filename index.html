@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VARC Trainer - Cozy Edition</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Cozy & Warm Palette
+                        bg: '#FDFCF8',       // Cream background
+                        card: '#FFFFFF',     // White cards
+                        primary: '#4A3F35',  // Dark Brown text
+                        secondary: '#8C7B6E',// Softer Brown text
+                        accent: '#D97706',   // Warm Orange accent (like candlelight)
+                        highlight: '#FDE68A', // Soft yellow for selections
+                        border: '#E5E1DA'    // Light beige border
+                    },
+                    fontFamily: {
+                        serif: ['Merriweather', 'serif'],
+                        sans: ['Inter', 'sans-serif']
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(74, 63, 53, 0.08)', // Softer shadow
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #FDFCF8; color: #4A3F35; }
+        ::selection { background-color: #FDE68A; color: #4A3F35; }
+        
+        /* RSVP Focus Lines (Warm) */
+        .rsvp-container { position: relative; display: flex; align-items: center; justify-content: center; height: 350px; }
+        .rsvp-focus-top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 25px; background: #D97706; opacity: 0.5; }
+        .rsvp-focus-bottom { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 25px; background: #D97706; opacity: 0.5; }
+        
+        /* Tooltip for dictionary (Warm) */
+        #dict-tooltip {
+            position: absolute; background: #FFFFFF; color: #4A3F35; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; z-index: 50;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #E5E1DA; max-width: 260px; display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased font-sans">
+
+    <div id="dict-tooltip"></div>
+
+    <nav class="border-b border-border bg-bg/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
+                <span class="text-2xl">📚</span>
+                <span class="font-bold text-lg tracking-tight text-primary">VARC<span class="text-accent">Trainer</span></span>
+            </div>
+            <div class="flex items-center gap-4">
+                 <span id="sync-status" class="text-xs font-medium text-secondary uppercase tracking-wider">Syncing...</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-5xl mx-auto w-full p-6">
+
+        <div id="view-dashboard" class="animate-fade-in">
+            <div class="bg-card rounded-3xl p-8 md:p-10 mb-10 border border-border shadow-soft relative overflow-hidden">
+                <div class="absolute top-0 right-0 -mt-10 -mr-10 opacity-5">
+                     <svg width="200" height="200" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                </div>
+                <div class="relative z-10">
+                    <span class="inline-block px-3 py-1 bg-accent/10 text-accent text-xs font-bold tracking-wider rounded-full mb-4">DAILY READ</span>
+                    <h1 id="essay-title" class="text-3xl md:text-4xl font-serif font-bold text-primary mb-4 leading-tight">Loading your daily read...</h1>
+                    <a id="source-btn" href="#" target="_blank" class="hidden inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-accent transition">
+                        Read Original on Aeon <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                <div class="bg-bg border border-border p-4 rounded-2xl text-center opacity-60 cursor-not-allowed">
+                    <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Schulte Tables</div>
+                    <div class="text-sm font-medium text-primary">Coming Soon</div>
+                </div>
+                <div class="bg-bg border border-border p-4 rounded-2xl text-center opacity-60 cursor-not-allowed">
+                     <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Saccade Jumps</div>
+                     <div class="text-sm font-medium text-primary">Coming Soon</div>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-bold text-primary mb-6 flex items-center gap-3">
+                <span class="text-2xl">☕</span> Today's Passages
+            </h2>
+            <div id="passages-list" class="grid md:grid-cols-2 gap-6"></div>
+        </div>
+
+        <div id="view-reader" class="hidden">
+            <div class="sticky top-20 z-30 mb-8 bg-card/90 backdrop-blur border border-border p-3 rounded-2xl shadow-soft flex flex-wrap gap-4 justify-between items-center">
+                
+                <div class="flex items-center gap-3">
+                    <button onclick="goHome()" class="p-2 text-secondary hover:text-primary transition" title="Back">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    
+                    <div class="bg-bg p-1 rounded-xl flex border border-border">
+                        <button onclick="setReaderMode('normal')" id="btn-mode-normal" class="px-4 py-1.5 text-xs font-bold rounded-lg bg-primary text-bg transition shadow-sm">TEXT</button>
+                        <button onclick="setReaderMode('rsvp')" id="btn-mode-rsvp" class="px-4 py-1.5 text-xs font-bold rounded-lg text-secondary hover:text-primary transition">SPEED</button>
+                    </div>
+                </div>
+                
+                <div id="rsvp-controls" class="hidden items-center gap-4 animate-fade-in">
+                    <div class="flex items-center gap-3 bg-bg px-4 py-1.5 rounded-xl border border-border">
+                        <input type="range" min="200" max="800" step="50" value="300" id="wpm-slider" class="w-24 h-1.5 bg-border rounded-full appearance-none cursor-pointer accent-accent">
+                        <span id="wpm-display" class="font-mono text-xs font-bold text-accent">300 WPM</span>
+                    </div>
+                    <button onclick="toggleRSVP()" id="rsvp-toggle-btn" class="bg-accent text-white px-5 py-1.5 rounded-xl text-xs font-bold hover:bg-orange-600 shadow-sm uppercase tracking-wide transition">Start</button>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="hidden md:flex items-center gap-2 bg-bg px-4 py-1.5 rounded-xl border border-border">
+                        <span class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></span>
+                        <span id="timer-display" class="font-mono text-sm font-bold text-primary">00:00</span>
+                    </div>
+                    <button onclick="finishReading()" class="bg-primary text-bg font-bold px-5 py-2 rounded-xl text-sm hover:bg-primary/90 transition shadow-soft">
+                        Quiz &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <div id="reading-container" class="max-w-3xl mx-auto">
+                <div class="text-xs font-medium text-secondary text-center mb-6 bg-bg py-2 rounded-full border border-border mx-auto w-fit px-4">💡 Tip: Double-click words for meaning</div>
+                <article id="text-display" class="font-serif text-lg md:text-xl leading-loose text-primary">
+                    </article>
+            </div>
+
+            <div id="rsvp-container" class="hidden max-w-3xl mx-auto bg-card border border-border rounded-3xl rsvp-container shadow-soft">
+                <div class="rsvp-focus-top"></div>
+                <div id="rsvp-word" class="font-serif text-5xl md:text-6xl font-bold text-primary tracking-wide">Ready</div>
+                <div class="rsvp-focus-bottom"></div>
+            </div>
+        </div>
+
+        <div id="view-quiz" class="hidden max-w-3xl mx-auto">
+            <div class="bg-card border border-border rounded-3xl p-8 mb-10 shadow-soft">
+                <h2 class="text-2xl font-bold text-primary mb-6 flex items-center gap-2">Is the aesthetic fine now?</h2>
+                <div class="grid grid-cols-3 gap-6 text-center">
+                    <div class="p-4 bg-bg rounded-2xl border border-border">
+                        <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">WPM</div>
+                        <div class="text-3xl font-mono font-bold text-accent" id="res-wpm">0</div>
+                    </div>
+                    <div class="p-4 bg-bg rounded-2xl border border-border">
+                        <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Tone</div>
+                        <div class="text-lg font-serif italic text-primary" id="res-tone">--</div>
+                    </div>
+                    <div class="p-4 bg-bg rounded-2xl border border-border col-span-3 md:col-span-1">
+                        <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Summary</div>
+                        <div class="text-xs text-secondary line-clamp-3 leading-relaxed" id="res-summary">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-bold text-primary mb-6">Comprehension Check</h3>
+            <div id="quiz-container" class="space-y-8"></div>
+
+            <button onclick="goHome()" class="mt-12 w-full py-4 rounded-2xl border-2 border-border hover:border-primary text-primary font-bold transition bg-bg hover:bg-card">
+                Load Next Passage
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // ... (SCRIPT REMAINS EXACTLY THE SAME AS BEFORE) ...
+        // Copy the entire <script> block from the previous dark aesthetic version
+        // and paste it here. The logic doesn't need to change, only the HTML/CSS above.
+        
+        let appData = null;
+        let currentPassageIdx = 0;
+        let timerInterval;
+        let seconds = 0;
+        let wordCount = 0;
+        let rsvpRunning = false;
+        let rsvpInterval;
+        let rsvpWords = [];
+        let rsvpIndex = 0;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('data.json?t=' + Date.now());
+                if(!res.ok) throw new Error("Data file missing");
+                appData = await res.json();
+                if(!appData.passages || appData.passages.length === 0) throw new Error("No passages found");
+                renderDashboard();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('essay-title').innerText = "System Error";
+                document.getElementById('essay-title').classList.add("text-red-500");
+            }
+        });
+
+        function renderDashboard() {
+            document.getElementById('sync-status').innerText = appData.metadata.date_scraped;
+            document.getElementById('essay-title').innerText = appData.metadata.title;
+            const srcBtn = document.getElementById('source-btn');
+            srcBtn.href = appData.metadata.source;
+            srcBtn.classList.remove('hidden');
+
+            const list = document.getElementById('passages-list');
+            list.innerHTML = '';
+
+            appData.passages.forEach((p, i) => {
+                const wCount = p.text.split(' ').length;
+                const card = document.createElement('div');
+                // Updated Card Styling for Warm Theme
+                card.className = "bg-card border border-border p-6 rounded-2xl hover:shadow-soft transition-all cursor-pointer group relative top-0 hover:-top-1";
+                card.onclick = () => startReading(i);
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-xs font-bold text-secondary uppercase tracking-wider group-hover:text-accent transition">PASSAGE ${i+1}</span>
+                        <span class="text-xs font-medium bg-bg text-secondary px-3 py-1 rounded-full border border-border">${wCount} words</span>
+                    </div>
+                    <p class="font-serif text-secondary line-clamp-3 mb-6 leading-relaxed group-hover:text-primary transition">
+                        ${p.text.substring(0, 120)}...
+                    </p>
+                    <div class="text-sm font-bold text-accent flex items-center gap-2">
+                        Begin Reading <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function startReading(idx) {
+            currentPassageIdx = idx;
+            const text = appData.passages[idx].text;
+            wordCount = text.split(' ').length;
+            document.getElementById('text-display').innerHTML = text.split('\n\n').map(p => `<p class="mb-8">${p}</p>`).join('');
+            rsvpWords = text.replace(/\n/g, ' ').split(/\s+/).filter(w => w.length > 0);
+            rsvpIndex = 0;
+            setReaderMode('normal');
+            switchView('view-reader');
+            startTimer();
+        }
+
+        function setReaderMode(mode) {
+            stopRSVP();
+            const btnNormal = document.getElementById('btn-mode-normal');
+            const btnRsvp = document.getElementById('btn-mode-rsvp');
+            if (mode === 'normal') {
+                document.getElementById('reading-container').classList.remove('hidden');
+                document.getElementById('rsvp-container').classList.add('hidden');
+                document.getElementById('rsvp-controls').classList.add('hidden');
+                // Updated Button Styles
+                btnNormal.classList.add('bg-primary', 'text-bg', 'shadow-sm');
+                btnNormal.classList.remove('text-secondary');
+                btnRsvp.classList.remove('bg-primary', 'text-bg', 'shadow-sm');
+                btnRsvp.classList.add('text-secondary');
+            } else {
+                document.getElementById('reading-container').classList.add('hidden');
+                document.getElementById('rsvp-container').classList.remove('hidden');
+                document.getElementById('rsvp-controls').classList.remove('hidden');
+                document.getElementById('rsvp-controls').classList.add('flex');
+                // Updated Button Styles
+                btnRsvp.classList.add('bg-primary', 'text-bg', 'shadow-sm');
+                btnRsvp.classList.remove('text-secondary');
+                btnNormal.classList.remove('bg-primary', 'text-bg', 'shadow-sm');
+                btnNormal.classList.add('text-secondary');
+                document.getElementById('rsvp-word').innerText = "Press Start";
+            }
+        }
+
+        const wpmSlider = document.getElementById('wpm-slider');
+        wpmSlider.oninput = function() {
+            document.getElementById('wpm-display').innerText = this.value + " WPM";
+            if(rsvpRunning) { stopRSVP(); toggleRSVP(); }
+        }
+
+        function toggleRSVP() {
+            if (rsvpRunning) { stopRSVP(); } else {
+                rsvpRunning = true;
+                document.getElementById('rsvp-toggle-btn').innerText = "STOP";
+                // Updated Button Style (Red for Stop)
+                document.getElementById('rsvp-toggle-btn').classList.replace('bg-accent', 'bg-red-500');
+                const wpm = parseInt(wpmSlider.value);
+                const intervalMs = 60000 / wpm;
+                rsvpInterval = setInterval(() => {
+                    if (rsvpIndex >= rsvpWords.length) { stopRSVP(); return; }
+                    document.getElementById('rsvp-word').innerText = rsvpWords[rsvpIndex++];
+                }, intervalMs);
+            }
+        }
+
+        function stopRSVP() {
+            rsvpRunning = false;
+            clearInterval(rsvpInterval);
+            document.getElementById('rsvp-toggle-btn').innerText = "START";
+            // Updated Button Style (Accent for Start)
+            document.getElementById('rsvp-toggle-btn').classList.replace('bg-red-500', 'bg-accent');
+        }
+
+        function startTimer() {
+            seconds = 0;
+            document.getElementById('timer-display').innerText = "00:00";
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const secs = (seconds % 60).toString().padStart(2, '0');
+                document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function finishReading() {
+            stopRSVP();
+            clearInterval(timerInterval);
+            renderAnalysis();
+            switchView('view-quiz');
+        }
+
+        function renderAnalysis() {
+            const mins = seconds / 60;
+            const wpm = mins > 0 ? Math.round(wordCount / mins) : wordCount;
+            document.getElementById('res-wpm').innerText = wpm;
+            const pData = appData.passages[currentPassageIdx];
+            document.getElementById('res-tone').innerText = pData.tone || "Not detected";
+            document.getElementById('res-summary').innerText = pData.summary || "No summary available.";
+            
+            const qContainer = document.getElementById('quiz-container');
+            qContainer.innerHTML = '';
+            if(!pData.questions || pData.questions.length === 0) {
+                qContainer.innerHTML = "<div class='text-secondary text-center py-8'>Questions unavailable for this passage.</div>";
+                return;
+            }
+            pData.questions.forEach((q, i) => {
+                const qDiv = document.createElement('div');
+                // Updated Quiz Card Style
+                qDiv.className = "bg-card border border-border p-8 rounded-2xl shadow-soft";
+                qDiv.innerHTML = `
+                    <div class="text-primary font-bold text-lg mb-6 leading-relaxed"><span class="text-accent mr-2">Q${i+1}.</span> ${q.question}</div>
+                    <div class="space-y-3">
+                        ${q.options.map((opt, oi) => `
+                            <button onclick="checkAnswer(this, ${i}, ${oi})" class="w-full text-left p-4 rounded-xl bg-bg border border-border hover:border-accent/50 text-primary transition font-medium leading-relaxed relative top-0 hover:-top-0.5">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="fb-${i}" class="hidden mt-6 p-4 rounded-xl text-sm font-medium leading-relaxed"></div>
+                `;
+                qContainer.appendChild(qDiv);
+            });
+        }
+
+        function checkAnswer(btn, qIdx, optIdx) {
+            const pData = appData.passages[currentPassageIdx];
+            const q = pData.questions[qIdx];
+            const fb = document.getElementById(`fb-${qIdx}`);
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            // Reset styles (Warm Theme)
+            allBtns.forEach(b => {
+                b.classList.remove('border-green-500', 'bg-green-50', 'text-green-800', 'border-red-500', 'bg-red-50', 'text-red-800');
+                b.classList.add('border-border', 'bg-bg', 'text-primary');
+            });
+            fb.classList.remove('hidden', 'bg-green-50', 'text-green-800', 'bg-red-50', 'text-red-800');
+
+            btn.classList.remove('border-border', 'bg-bg', 'text-primary');
+            if (optIdx === q.correct_index) {
+                // Correct Style (Warm Green)
+                btn.classList.add('border-green-500', 'bg-green-50', 'text-green-800');
+                fb.classList.add('bg-green-50', 'text-green-800');
+                fb.innerHTML = `<strong class="block mb-1">Correct.</strong> ${q.explanation}`;
+            } else {
+                // Incorrect Style (Warm Red)
+                btn.classList.add('border-red-500', 'bg-red-50', 'text-red-800');
+                fb.classList.add('bg-red-50', 'text-red-800');
+                fb.innerHTML = `<strong class="block mb-1">Incorrect.</strong> ${q.explanation}`;
+            }
+        }
+
+        document.addEventListener('dblclick', async (e) => {
+            const sel = window.getSelection();
+            const word = sel.toString().trim();
+            if (word.length > 1 && /^[a-zA-Z]+$/.test(word)) {
+                const tooltip = document.getElementById('dict-tooltip');
+                tooltip.style.display = 'block';
+                tooltip.style.left = e.pageX + 'px';
+                tooltip.style.top = (e.pageY + 20) + 'px';
+                tooltip.innerHTML = "Loading...";
+                try {
+                    const req = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                    if (!req.ok) throw new Error();
+                    const res = await req.json();
+                    const def = res[0].meanings[0].definitions[0].definition;
+                    tooltip.innerHTML = `<strong>${word}</strong>: <br class="mb-1">${def}`;
+                } catch (err) {
+                    tooltip.innerHTML = `Definition not found for "${word}"`;
+                    setTimeout(() => tooltip.style.display = 'none', 2000);
+                }
+            }
+        });
+        document.addEventListener('click', (e) => {
+            if(!document.getElementById('dict-tooltip').contains(e.target)) {
+                document.getElementById('dict-tooltip').style.display = 'none';
+            }
+        });
+        function switchView(id) {
+            ['view-dashboard', 'view-reader', 'view-quiz'].forEach(v => document.getElementById(v).classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
+        function goHome() {
+            stopRSVP();
+            clearInterval(timerInterval);
+            switchView('view-dashboard');
+        }
+    </script>
+</body>
+</html>
