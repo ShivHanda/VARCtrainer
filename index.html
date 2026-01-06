@@ -147,28 +147,32 @@
 
         <div id="view-quiz" class="hidden max-w-3xl mx-auto">
             <div class="bg-card border border-border rounded-3xl p-8 mb-10 shadow-soft">
-                <h2 class="text-2xl font-bold text-primary mb-6 flex items-center gap-2">Is the aesthetic fine now?</h2>
+                <h2 class="text-2xl font-bold text-primary mb-6 flex items-center gap-2">Performance Analysis</h2>
                 <div class="grid grid-cols-3 gap-6 text-center">
                     <div class="p-4 bg-bg rounded-2xl border border-border">
                         <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">WPM</div>
                         <div class="text-3xl font-mono font-bold text-accent" id="res-wpm">0</div>
                     </div>
                     <div class="p-4 bg-bg rounded-2xl border border-border">
+                        <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Time Taken</div>
+                        <div class="text-lg font-serif italic text-primary" id="res-time">0:00</div>
+                    </div>
+                    <div class="p-4 bg-bg rounded-2xl border border-border">
                         <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Tone</div>
                         <div class="text-lg font-serif italic text-primary" id="res-tone">--</div>
                     </div>
-                    <div class="p-4 bg-bg rounded-2xl border border-border col-span-3 md:col-span-1">
+                </div>
+            </div>
+            <div class="bg-card border border-border rounded-3xl p-8 mb-10 shadow-soft">
                         <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Summary</div>
                         <div class="text-xs text-secondary line-clamp-3 leading-relaxed" id="res-summary">--</div>
                     </div>
-                </div>
-            </div>
 
             <h3 class="text-xl font-bold text-primary mb-6">Comprehension Check</h3>
             <div id="quiz-container" class="space-y-8"></div>
 
             <button onclick="goHome()" class="mt-12 w-full py-4 rounded-2xl border-2 border-border hover:border-primary text-primary font-bold transition bg-bg hover:bg-card">
-                Load Next Passage
+                Home
             </button>
         </div>
 
@@ -326,6 +330,7 @@
             const mins = seconds / 60;
             const wpm = mins > 0 ? Math.round(wordCount / mins) : wordCount;
             document.getElementById('res-wpm').innerText = wpm;
+            document.getElementById('res-time').innerText = document.getElementById('timer-display').innerText;
             const pData = appData.passages[currentPassageIdx];
             document.getElementById('res-tone').innerText = pData.tone || "Not detected";
             document.getElementById('res-summary').innerText = pData.summary || "No summary available.";
