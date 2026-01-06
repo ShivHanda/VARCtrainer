@@ -1,12 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VARC Trainer</title>
-    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script>
@@ -32,12 +31,6 @@
     <style>
         body { background-color: #0f172a; color: #e2e8f0; }
         .selection-highlight { background-color: #312e81; color: white; }
-        
-        /* RSVP Focus Lines */
-        .rsvp-container { position: relative; display: flex; align-items: center; justify-content: center; height: 350px; }
-        .rsvp-focus-top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 25px; background: #475569; }
-        .rsvp-focus-bottom { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 25px; background: #475569; }
-        
         /* Tooltip for dictionary */
         #dict-tooltip {
             position: absolute;
@@ -60,8 +53,8 @@
 
     <nav class="border-b border-slate-800 bg-dark/80 backdrop-blur sticky top-0 z-40">
         <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
-                <div class="w-8 h-8 bg-accent text-dark rounded flex items-center justify-center font-bold font-mono">⚡</div>
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-accent text-dark rounded flex items-center justify-center font-bold font-mono">❀</div>
                 <span class="font-bold text-lg tracking-tight text-white">VARC<span class="text-accent">Trainer</span></span>
             </div>
             <div class="flex items-center gap-4">
@@ -81,7 +74,8 @@
                     <span class="inline-block px-2 py-1 bg-accent/10 text-accent text-xs font-bold tracking-wider rounded mb-4">DAILY ESSAY</span>
                     <h1 id="essay-title" class="text-2xl md:text-3xl font-serif font-bold text-white mb-4 leading-tight">Loading content...</h1>
                     <a id="source-btn" href="#" target="_blank" class="hidden inline-flex items-center gap-2 text-sm text-muted hover:text-white transition">
-                        Read Original <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        Read Original on Aeon
                     </a>
                 </div>
             </div>
@@ -100,55 +94,37 @@
             <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-accent"></span> Today's Passages
             </h2>
-            <div id="passages-list" class="grid md:grid-cols-2 gap-6"></div>
+            <div id="passages-list" class="grid md:grid-cols-2 gap-6">
+                </div>
         </div>
 
         <div id="view-reader" class="hidden">
-            <div class="sticky top-20 z-30 mb-6 bg-card/90 backdrop-blur border border-slate-700 p-3 rounded-lg shadow-xl flex flex-wrap gap-4 justify-between items-center">
+            <div class="sticky top-20 z-30 mb-6 flex justify-between items-center bg-card/90 backdrop-blur border border-slate-700 p-3 rounded-lg shadow-xl">
+                <button onclick="goHome()" class="text-sm text-muted hover:text-white flex items-center gap-1">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg> Back
+                </button>
                 
-                <div class="flex items-center gap-3">
-                    <button onclick="goHome()" class="p-2 text-muted hover:text-white" title="Back">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-                    </button>
-                    
-                    <div class="bg-dark p-1 rounded flex border border-slate-800">
-                        <button onclick="setReaderMode('normal')" id="btn-mode-normal" class="px-3 py-1 text-xs font-bold rounded bg-slate-700 text-white transition">TEXT</button>
-                        <button onclick="setReaderMode('rsvp')" id="btn-mode-rsvp" class="px-3 py-1 text-xs font-bold rounded text-muted hover:text-white transition">SPEED</button>
-                    </div>
-                </div>
-                
-                <div id="rsvp-controls" class="hidden items-center gap-3 animate-fade-in">
+                <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2 bg-dark px-3 py-1 rounded border border-slate-800">
-                        <input type="range" min="200" max="800" step="50" value="300" id="wpm-slider" class="w-24 h-1 bg-slate-600 rounded appearance-none cursor-pointer accent-accent">
-                        <span id="wpm-display" class="font-mono text-xs font-bold text-accent">300 WPM</span>
+                        <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                        <span id="timer-display" class="font-mono text-lg font-bold text-white">00:00</span>
                     </div>
-                    <button onclick="toggleRSVP()" id="rsvp-toggle-btn" class="bg-accent text-dark px-4 py-1 rounded text-xs font-bold hover:bg-indigo-400 uppercase tracking-wide">Start</button>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <div class="hidden md:flex items-center gap-2 bg-dark px-3 py-1 rounded border border-slate-800">
-                        <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                        <span id="timer-display" class="font-mono text-sm font-bold text-white">00:00</span>
-                    </div>
-                    <button onclick="finishReading()" class="bg-white text-dark font-bold px-4 py-1.5 rounded text-sm hover:bg-gray-200 transition shadow-lg">
-                        Quiz &rarr;
-                    </button>
-                </div>
+                <button onclick="finishReading()" class="bg-accent hover:bg-indigo-400 text-dark font-bold px-4 py-1.5 rounded text-sm transition">
+                    Done
+                </button>
             </div>
 
             <div id="reading-container" class="max-w-3xl mx-auto">
-                <div class="text-xs text-muted text-center mb-4">Double-click words for meaning</div>
-                <div id="text-display" class="font-serif text-lg md:text-xl leading-relaxed text-slate-300 selection:bg-accent selection:text-dark"></div>
-            </div>
-
-            <div id="rsvp-container" class="hidden max-w-3xl mx-auto bg-card border border-slate-700 rounded-xl rsvp-container shadow-2xl">
-                <div class="rsvp-focus-top"></div>
-                <div id="rsvp-word" class="font-serif text-5xl md:text-6xl font-bold text-white tracking-wide">Ready</div>
-                <div class="rsvp-focus-bottom"></div>
+                <div class="text-xs text-muted text-center mb-2">Double-click any word for definition</div>
+                <div id="text-display" class="font-serif text-lg md:text-xl leading-relaxed text-slate-300 selection:bg-accent selection:text-dark">
+                    </div>
             </div>
         </div>
 
         <div id="view-quiz" class="hidden max-w-3xl mx-auto">
+            
             <div class="bg-gradient-to-br from-card to-dark border border-slate-700 rounded-xl p-6 mb-8">
                 <h2 class="text-xl font-bold text-white mb-4">Performance Analysis</h2>
                 <div class="grid grid-cols-3 gap-4 text-center">
@@ -189,17 +165,10 @@
         let timerInterval;
         let seconds = 0;
         let wordCount = 0;
-        
-        // RSVP Variables
-        let rsvpRunning = false;
-        let rsvpInterval;
-        let rsvpWords = [];
-        let rsvpIndex = 0;
 
         // --- INIT ---
         window.addEventListener('DOMContentLoaded', async () => {
             try {
-                // Ensure we get fresh data
                 const res = await fetch('data.json?t=' + Date.now());
                 if(!res.ok) throw new Error("Data file missing");
                 appData = await res.json();
@@ -227,6 +196,8 @@
 
             appData.passages.forEach((p, i) => {
                 const wCount = p.text.split(' ').length;
+                const estTime = Math.ceil(wCount / 250);
+                
                 const card = document.createElement('div');
                 card.className = "bg-card border border-slate-700 p-6 rounded-xl hover:border-accent transition cursor-pointer group";
                 card.onclick = () => startReading(i);
@@ -251,84 +222,58 @@
             currentPassageIdx = idx;
             const text = appData.passages[idx].text;
             wordCount = text.split(' ').length;
-            
-            // 1. Prepare Normal Text
-            document.getElementById('text-display').innerHTML = text.split('\n\n').map(p => `<p class="mb-6">${p}</p>`).join('');
-            
-            // 2. Prepare RSVP Data
+            document.getElementById('text-display').innerHTML = text.split('\n\n').map(p => `<p class="mb-8">${p}</p>`).join('');
             rsvpWords = text.replace(/\n/g, ' ').split(/\s+/).filter(w => w.length > 0);
             rsvpIndex = 0;
-
-            // 3. Reset UI
             setReaderMode('normal');
             switchView('view-reader');
             startTimer();
         }
 
         function setReaderMode(mode) {
-            stopRSVP(); // Stop if running
-            
+            stopRSVP();
             const btnNormal = document.getElementById('btn-mode-normal');
             const btnRsvp = document.getElementById('btn-mode-rsvp');
-            
             if (mode === 'normal') {
-                // Show Text, Hide RSVP
                 document.getElementById('reading-container').classList.remove('hidden');
                 document.getElementById('rsvp-container').classList.add('hidden');
                 document.getElementById('rsvp-controls').classList.add('hidden');
-                
-                // Button Styling
-                btnNormal.classList.add('bg-slate-700', 'text-white');
-                btnNormal.classList.remove('text-muted');
-                btnRsvp.classList.remove('bg-slate-700', 'text-white');
-                btnRsvp.classList.add('text-muted');
-                
+                // Updated Button Styles
+                btnNormal.classList.add('bg-primary', 'text-bg', 'shadow-sm');
+                btnNormal.classList.remove('text-secondary');
+                btnRsvp.classList.remove('bg-primary', 'text-bg', 'shadow-sm');
+                btnRsvp.classList.add('text-secondary');
             } else {
-                // Show RSVP, Hide Text
                 document.getElementById('reading-container').classList.add('hidden');
                 document.getElementById('rsvp-container').classList.remove('hidden');
                 document.getElementById('rsvp-controls').classList.remove('hidden');
-                document.getElementById('rsvp-controls').classList.add('flex'); 
-                
-                // Button Styling
-                btnRsvp.classList.add('bg-slate-700', 'text-white');
-                btnRsvp.classList.remove('text-muted');
-                btnNormal.classList.remove('bg-slate-700', 'text-white');
-                btnNormal.classList.add('text-muted');
-                
+                document.getElementById('rsvp-controls').classList.add('flex');
+                // Updated Button Styles
+                btnRsvp.classList.add('bg-primary', 'text-bg', 'shadow-sm');
+                btnRsvp.classList.remove('text-secondary');
+                btnNormal.classList.remove('bg-primary', 'text-bg', 'shadow-sm');
+                btnNormal.classList.add('text-secondary');
                 document.getElementById('rsvp-word').innerText = "Press Start";
             }
         }
 
-        // --- RSVP / SPEED READER ENGINE ---
         const wpmSlider = document.getElementById('wpm-slider');
-        
         wpmSlider.oninput = function() {
             document.getElementById('wpm-display').innerText = this.value + " WPM";
-            if(rsvpRunning) {
-                stopRSVP();
-                toggleRSVP();
-            }
+            if(rsvpRunning) { stopRSVP(); toggleRSVP(); }
         }
 
         function toggleRSVP() {
-            if (rsvpRunning) {
-                stopRSVP();
-            } else {
+            if (rsvpRunning) { stopRSVP(); } else {
                 rsvpRunning = true;
                 document.getElementById('rsvp-toggle-btn').innerText = "STOP";
+                // Updated Button Style (Red for Stop)
                 document.getElementById('rsvp-toggle-btn').classList.replace('bg-accent', 'bg-red-500');
-                
                 const wpm = parseInt(wpmSlider.value);
                 const intervalMs = 60000 / wpm;
-
                 rsvpInterval = setInterval(() => {
-                    if (rsvpIndex >= rsvpWords.length) {
-                        stopRSVP();
-                        return;
-                    }
-                    document.getElementById('rsvp-word').innerText = rsvpWords[rsvpIndex];
-                    rsvpIndex++;
+                    if (rsvpIndex >= rsvpWords.length) { stopRSVP(); return; }
+                    document.getElementById('rsvp-word').innerText = rsvpWords[rsvpIndex++];
                 }, intervalMs);
             }
         }
@@ -337,10 +282,10 @@
             rsvpRunning = false;
             clearInterval(rsvpInterval);
             document.getElementById('rsvp-toggle-btn').innerText = "START";
+            // Updated Button Style (Accent for Start)
             document.getElementById('rsvp-toggle-btn').classList.replace('bg-red-500', 'bg-accent');
         }
 
-        // --- TIMER ---
         function startTimer() {
             seconds = 0;
             document.getElementById('timer-display').innerText = "00:00";
@@ -354,7 +299,6 @@
         }
 
         function finishReading() {
-            stopRSVP();
             clearInterval(timerInterval);
             renderAnalysis();
             switchView('view-quiz');
@@ -365,6 +309,7 @@
             // WPM Calc
             const mins = seconds / 60;
             const wpm = mins > 0 ? Math.round(wordCount / mins) : wordCount;
+            
             document.getElementById('res-wpm').innerText = wpm;
             document.getElementById('res-time').innerText = document.getElementById('timer-display').innerText;
             
@@ -404,6 +349,7 @@
             const q = pData.questions[qIdx];
             const fb = document.getElementById(`fb-${qIdx}`);
             
+            // Reset styles for this question
             const allBtns = btn.parentElement.querySelectorAll('button');
             allBtns.forEach(b => b.classList.remove('border-green-500', 'border-red-500', 'text-white'));
 
@@ -420,7 +366,7 @@
             }
         }
 
-        // --- DICTIONARY FEATURE ---
+        // --- DICTIONARY FEATURE (Panic Button) ---
         document.addEventListener('dblclick', async (e) => {
             const sel = window.getSelection();
             const word = sel.toString().trim();
@@ -444,6 +390,7 @@
             }
         });
 
+        // Hide tooltip on click elsewhere
         document.addEventListener('click', () => {
             document.getElementById('dict-tooltip').style.display = 'none';
         });
@@ -451,3 +398,14 @@
         // --- UTILS ---
         function switchView(id) {
             ['view-dashboard', 'view-reader', 'view-quiz'].forEach(v => document.getElementById(v).classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
+
+        function goHome() {
+            clearInterval(timerInterval);
+            switchView('view-dashboard');
+        }
+    </script>
+</body>
+</html>
