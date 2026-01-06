@@ -1,11 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VARC Trainer</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    <title>VARC Trainer Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script>
@@ -54,7 +52,7 @@
     <nav class="border-b border-slate-800 bg-dark/80 backdrop-blur sticky top-0 z-40">
         <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-accent text-dark rounded flex items-center justify-center font-bold font-mono">❀</div>
+                <div class="w-8 h-8 bg-accent text-dark rounded flex items-center justify-center font-bold font-mono">V</div>
                 <span class="font-bold text-lg tracking-tight text-white">VARC<span class="text-accent">Trainer</span></span>
             </div>
             <div class="flex items-center gap-4">
@@ -222,68 +220,12 @@
             currentPassageIdx = idx;
             const text = appData.passages[idx].text;
             wordCount = text.split(' ').length;
-            document.getElementById('text-display').innerHTML = text.split('\n\n').map(p => `<p class="mb-8">${p}</p>`).join('');
-            rsvpWords = text.replace(/\n/g, ' ').split(/\s+/).filter(w => w.length > 0);
-            rsvpIndex = 0;
-            setReaderMode('normal');
+            
+            // Format Text with Paragraphs
+            document.getElementById('text-display').innerHTML = text.split('\n\n').map(p => `<p class="mb-6">${p}</p>`).join('');
+            
             switchView('view-reader');
             startTimer();
-        }
-
-        function setReaderMode(mode) {
-            stopRSVP();
-            const btnNormal = document.getElementById('btn-mode-normal');
-            const btnRsvp = document.getElementById('btn-mode-rsvp');
-            if (mode === 'normal') {
-                document.getElementById('reading-container').classList.remove('hidden');
-                document.getElementById('rsvp-container').classList.add('hidden');
-                document.getElementById('rsvp-controls').classList.add('hidden');
-                // Updated Button Styles
-                btnNormal.classList.add('bg-primary', 'text-bg', 'shadow-sm');
-                btnNormal.classList.remove('text-secondary');
-                btnRsvp.classList.remove('bg-primary', 'text-bg', 'shadow-sm');
-                btnRsvp.classList.add('text-secondary');
-            } else {
-                document.getElementById('reading-container').classList.add('hidden');
-                document.getElementById('rsvp-container').classList.remove('hidden');
-                document.getElementById('rsvp-controls').classList.remove('hidden');
-                document.getElementById('rsvp-controls').classList.add('flex');
-                // Updated Button Styles
-                btnRsvp.classList.add('bg-primary', 'text-bg', 'shadow-sm');
-                btnRsvp.classList.remove('text-secondary');
-                btnNormal.classList.remove('bg-primary', 'text-bg', 'shadow-sm');
-                btnNormal.classList.add('text-secondary');
-                document.getElementById('rsvp-word').innerText = "Press Start";
-            }
-        }
-
-        const wpmSlider = document.getElementById('wpm-slider');
-        wpmSlider.oninput = function() {
-            document.getElementById('wpm-display').innerText = this.value + " WPM";
-            if(rsvpRunning) { stopRSVP(); toggleRSVP(); }
-        }
-
-        function toggleRSVP() {
-            if (rsvpRunning) { stopRSVP(); } else {
-                rsvpRunning = true;
-                document.getElementById('rsvp-toggle-btn').innerText = "STOP";
-                // Updated Button Style (Red for Stop)
-                document.getElementById('rsvp-toggle-btn').classList.replace('bg-accent', 'bg-red-500');
-                const wpm = parseInt(wpmSlider.value);
-                const intervalMs = 60000 / wpm;
-                rsvpInterval = setInterval(() => {
-                    if (rsvpIndex >= rsvpWords.length) { stopRSVP(); return; }
-                    document.getElementById('rsvp-word').innerText = rsvpWords[rsvpIndex++];
-                }, intervalMs);
-            }
-        }
-
-        function stopRSVP() {
-            rsvpRunning = false;
-            clearInterval(rsvpInterval);
-            document.getElementById('rsvp-toggle-btn').innerText = "START";
-            // Updated Button Style (Accent for Start)
-            document.getElementById('rsvp-toggle-btn').classList.replace('bg-red-500', 'bg-accent');
         }
 
         function startTimer() {
