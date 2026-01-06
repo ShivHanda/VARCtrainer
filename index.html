@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VARC Trainer</title>
+    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script>
@@ -58,7 +60,7 @@
 
     <nav class="border-b border-slate-800 bg-dark/80 backdrop-blur sticky top-0 z-40">
         <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
                 <div class="w-8 h-8 bg-accent text-dark rounded flex items-center justify-center font-bold font-mono">⚡</div>
                 <span class="font-bold text-lg tracking-tight text-white">VARC<span class="text-accent">Trainer</span></span>
             </div>
@@ -79,8 +81,7 @@
                     <span class="inline-block px-2 py-1 bg-accent/10 text-accent text-xs font-bold tracking-wider rounded mb-4">DAILY ESSAY</span>
                     <h1 id="essay-title" class="text-2xl md:text-3xl font-serif font-bold text-white mb-4 leading-tight">Loading content...</h1>
                     <a id="source-btn" href="#" target="_blank" class="hidden inline-flex items-center gap-2 text-sm text-muted hover:text-white transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                        Read Original on Aeon
+                        Read Original <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                     </a>
                 </div>
             </div>
@@ -99,8 +100,7 @@
             <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-accent"></span> Today's Passages
             </h2>
-            <div id="passages-list" class="grid md:grid-cols-2 gap-6">
-            </div>
+            <div id="passages-list" class="grid md:grid-cols-2 gap-6"></div>
         </div>
 
         <div id="view-reader" class="hidden">
@@ -124,7 +124,7 @@
                     </div>
                     <button onclick="toggleRSVP()" id="rsvp-toggle-btn" class="bg-accent text-dark px-4 py-1 rounded text-xs font-bold hover:bg-indigo-400 uppercase tracking-wide">Start</button>
                 </div>
-                
+
                 <div class="flex items-center gap-4">
                     <div class="hidden md:flex items-center gap-2 bg-dark px-3 py-1 rounded border border-slate-800">
                         <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
@@ -149,7 +149,6 @@
         </div>
 
         <div id="view-quiz" class="hidden max-w-3xl mx-auto">
-            
             <div class="bg-gradient-to-br from-card to-dark border border-slate-700 rounded-xl p-6 mb-8">
                 <h2 class="text-xl font-bold text-white mb-4">Performance Analysis</h2>
                 <div class="grid grid-cols-3 gap-4 text-center">
@@ -190,6 +189,8 @@
         let timerInterval;
         let seconds = 0;
         let wordCount = 0;
+        
+        // RSVP Variables
         let rsvpRunning = false;
         let rsvpInterval;
         let rsvpWords = [];
@@ -198,6 +199,7 @@
         // --- INIT ---
         window.addEventListener('DOMContentLoaded', async () => {
             try {
+                // Ensure we get fresh data
                 const res = await fetch('data.json?t=' + Date.now());
                 if(!res.ok) throw new Error("Data file missing");
                 appData = await res.json();
@@ -275,7 +277,7 @@
                 document.getElementById('rsvp-container').classList.add('hidden');
                 document.getElementById('rsvp-controls').classList.add('hidden');
                 
-                // Button Styling (Dark Theme)
+                // Button Styling
                 btnNormal.classList.add('bg-slate-700', 'text-white');
                 btnNormal.classList.remove('text-muted');
                 btnRsvp.classList.remove('bg-slate-700', 'text-white');
@@ -286,9 +288,9 @@
                 document.getElementById('reading-container').classList.add('hidden');
                 document.getElementById('rsvp-container').classList.remove('hidden');
                 document.getElementById('rsvp-controls').classList.remove('hidden');
-                document.getElementById('rsvp-controls').classList.add('flex');
+                document.getElementById('rsvp-controls').classList.add('flex'); 
                 
-                // Button Styling (Dark Theme)
+                // Button Styling
                 btnRsvp.classList.add('bg-slate-700', 'text-white');
                 btnRsvp.classList.remove('text-muted');
                 btnNormal.classList.remove('bg-slate-700', 'text-white');
@@ -409,4 +411,43 @@
 
             if (optIdx === q.correct_index) {
                 btn.classList.add('border-green-500', 'text-white');
-                fb.classList.add('bg-green-900/50', 'text
+                fb.classList.add('bg-green-900/50', 'text-green-200');
+                fb.innerHTML = `<strong>Correct.</strong> ${q.explanation}`;
+            } else {
+                btn.classList.add('border-red-500', 'text-white');
+                fb.classList.add('bg-red-900/50', 'text-red-200');
+                fb.innerHTML = `<strong>Incorrect.</strong> ${q.explanation}`;
+            }
+        }
+
+        // --- DICTIONARY FEATURE ---
+        document.addEventListener('dblclick', async (e) => {
+            const sel = window.getSelection();
+            const word = sel.toString().trim();
+            if (word.length > 1 && /^[a-zA-Z]+$/.test(word)) {
+                const tooltip = document.getElementById('dict-tooltip');
+                tooltip.style.display = 'block';
+                tooltip.style.left = e.pageX + 'px';
+                tooltip.style.top = (e.pageY + 20) + 'px';
+                tooltip.innerHTML = "Loading definition...";
+                
+                try {
+                    const req = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                    if (!req.ok) throw new Error();
+                    const res = await req.json();
+                    const def = res[0].meanings[0].definitions[0].definition;
+                    tooltip.innerHTML = `<strong>${word}</strong>: ${def}`;
+                } catch (err) {
+                    tooltip.innerHTML = `Definition not found for "${word}"`;
+                    setTimeout(() => tooltip.style.display = 'none', 2000);
+                }
+            }
+        });
+
+        document.addEventListener('click', () => {
+            document.getElementById('dict-tooltip').style.display = 'none';
+        });
+
+        // --- UTILS ---
+        function switchView(id) {
+            ['view-dashboard', 'view-reader', 'view-quiz'].forEach(v => document.getElementById(v).classList.add('hidden'));
