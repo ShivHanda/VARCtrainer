@@ -1,0 +1,39 @@
+name: Daily Content Update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run Scraper
+      env: 
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}  # <--- Ye line add hui hai
+      run: python scraper.py
+
+    - name: Commit and Push changes
+      run: |
+        git config --global user.name 'GitHub Action'
+        git config --global user.email 'action@github.com'
+        git add data.json
+        git commit -m "Auto-update: New Aeon Essay with Questions" || exit 0
+        git push
