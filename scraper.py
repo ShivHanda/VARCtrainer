@@ -12,121 +12,90 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
-# We need headers to look like a real browser, otherwise Aeon blocks us
+# --- BACKUP CONTENT (FAIL-SAFE) ---
+# Agar scraping fail hoti hai, to ye content load hoga. Error nahi aayega.
+BACKUP_TITLE = "The case for idleness"
+BACKUP_SOURCE = "https://aeon.co/essays/backup-content-loaded"
+BACKUP_TEXT = """
+Work is the defining characteristic of our society. We are taught that the devil finds work for idle hands, and that we should always be busy. But is this true? For most of human history, leisure was the goal of life. The Greeks saw work as a means to an end, not an end in itself. Aristotle argued that we work in order to have leisure. Today, however, we have reversed this. We treat leisure as a time to recharge so that we can work more. 
+
+This obsession with productivity is damaging our mental health and our creativity. When we are constantly busy, we do not have time to think. Deep thought requires silence and stillness. It requires the ability to let the mind wander. History's greatest thinkers were often idlers. Bertrand Russell wrote a famous essay in praise of idleness, arguing that if we all worked four hours a day, there would be enough for everyone, and we would all have time to pursue our passions.
+
+The modern economy, however, is built on the consumption of goods and services, which requires constant production. We are trapped in a cycle of earning and spending. To break this, we need to redefine what it means to live a good life. We need to value time over money, and experiences over possessions. We need to learn how to do nothing.
+
+Doing nothing is not easy. We are addicted to stimulation. We reach for our phones the moment we are bored. But boredom is the gateway to creativity. When we are bored, our brains start to make new connections. We start to dream. If we want to solve the complex problems of the 21st century, we need more dreamers and fewer worker bees. We need to reclaim our right to be idle.
+"""
+
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-    'Referer': 'https://aeon.co/'
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 }
 
-def get_live_essay_url():
-    """
-    Visits the main Aeon Essays page and finds the first valid essay link.
-    """
-    feed_url = "https://aeon.co/essays"
-    print(f"Searching for latest essay at: {feed_url}")
+def get_latest_essay_from_rss():
+    """Fetches the latest essay link from Aeon's RSS Feed (More reliable)."""
+    rss_url = "https://aeon.co/feed.rss"
+    print(f"Checking RSS Feed: {rss_url}")
     
     try:
-        response = requests.get(feed_url, headers=HEADERS, timeout=10)
-        soup = BeautifulSoup(response.content, 'html.parser')
+        response = requests.get(rss_url, headers=HEADERS, timeout=10)
+        soup = BeautifulSoup(response.content, 'xml') # RSS is XML
         
-        # Find all links that point to /essays/...
-        links = soup.find_all('a', href=True)
-        
-        valid_urls = []
-        for link in links:
-            href = link['href']
-            # We want links that are deep (e.g. /essays/slug) not just /essays or /essays/popular
-            if '/essays/' in href and href.count('/') > 1:
-                full_url = f"https://aeon.co{href}"
-                if full_url not in valid_urls:
-                    valid_urls.append(full_url)
-        
-        if valid_urls:
-            # Pick the first one (usually the latest)
-            print(f"Found live URL: {valid_urls[0]}")
-            return valid_urls[0]
-            
+        items = soup.find_all('item')
+        for item in items:
+            link = item.link.text
+            # Ensure it is an essay, not a video
+            if "/essays/" in link:
+                print(f"Found RSS Link: {link}")
+                return link
     except Exception as e:
-        print(f"Error finding dynamic URL: {e}")
+        print(f"RSS Failed: {e}")
     
-    # FALLBACK: If dynamic search fails, use the working URL you provided
-    print("Dynamic search failed. Using fallback URL.")
-    return "https://aeon.co/essays/how-a-playful-literary-hoax-illuminates-classical-queerness"
+    return None
 
 def scrape_essay(url):
-    print(f"Scraping content from: {url}")
+    print(f"Scraping: {url}")
     try:
         response = requests.get(url, headers=HEADERS, timeout=15)
-        if response.status_code != 200:
-            print(f"Failed to load page. Status: {response.status_code}")
-            return None, None
-            
         soup = BeautifulSoup(response.content, 'html.parser')
-
-        # 1. Get Title
+        
+        # 1. Title
         h1 = soup.find('h1')
         title = h1.get_text(strip=True) if h1 else "Aeon Essay"
-
-        # 2. Get Text - Try multiple selectors to be safe
-        # Aeon usually puts text in 'article__body' or just standard p tags in the main container
-        paragraphs = []
         
-        # Strategy A: Look for specific class
-        body_div = soup.find('div', class_='article__body')
-        if body_div:
-            paragraphs = body_div.find_all('p')
-        else:
-            # Strategy B: Grab all paragraphs and filter strictly
-            paragraphs = soup.find_all('p')
-
+        # 2. Text (Smart Extraction)
+        # Try finding the specific article body div first
+        article = soup.find('div', class_='article__body')
+        if not article:
+             article = soup # Fallback to search whole page
+             
+        paragraphs = article.find_all('p')
         clean_text = []
+        
         for p in paragraphs:
-            text = p.get_text(strip=True)
-            # Filter garbage (menus, footers, newsletters)
-            if len(text.split()) > 25 and "subscribe" not in text.lower():
-                clean_text.append(text)
+            txt = p.get_text(strip=True)
+            # Filter garbage
+            if len(txt.split()) > 25 and "subscribe" not in txt.lower():
+                clean_text.append(txt)
                 
         if not clean_text:
-            print("Warning: No text paragraphs found.")
             return None, None
             
         return title, clean_text
-
-    except Exception as e:
-        print(f"Scraping Error: {e}")
-        return None, None
-
-def chunk_text(paragraphs, chunk_size=550):
-    chunks = []
-    current_chunk = []
-    word_count = 0
-    
-    for p in paragraphs:
-        w_len = len(p.split())
-        current_chunk.append(p)
-        word_count += w_len
         
-        if word_count >= chunk_size:
-            chunks.append("\n\n".join(current_chunk))
-            current_chunk = []
-            word_count = 0
-            
-    if current_chunk:
-        chunks.append("\n\n".join(current_chunk))
-    return chunks
+    except Exception as e:
+        print(f"Scrape Error: {e}")
+        return None, None
 
 def generate_cat_questions(text_chunk):
     if not GEMINI_API_KEY:
         return []
     
-    # Simplified logic to prevent errors
     model = genai.GenerativeModel('gemini-1.5-flash')
     prompt = f"""
-    Create 3 Reading Comprehension questions (CAT Exam style) for this text.
+    Create 3 Reading Comprehension questions (CAT style) for this text.
     Text: {text_chunk[:2000]}
     
-    Output strictly as this JSON format:
+    Return ONLY JSON array:
     [
         {{
             "question": "...",
@@ -144,44 +113,56 @@ def generate_cat_questions(text_chunk):
         return []
 
 def main():
-    # 1. Find a working URL
-    target_url = get_live_essay_url()
+    # 1. Try RSS First
+    url = get_latest_essay_from_rss()
+    title = None
+    paragraphs = None
     
-    # 2. Scrape it
-    title, paragraphs = scrape_essay(target_url)
+    if url:
+        title, paragraphs = scrape_essay(url)
     
+    # 2. FAIL-SAFE: If RSS or Scraping failed, use Backup
     if not paragraphs:
-        print("CRITICAL: Scraper returned no content. Exiting.")
-        # Create a dummy error file so we know it failed
-        with open('data.json', 'w') as f:
-            json.dump({"metadata": {"title": "Error - Scraping Failed"}, "passages": []}, f)
-        return
+        print("CRITICAL: Scraper failed. Loading BACKUP Content.")
+        title = BACKUP_TITLE
+        url = BACKUP_SOURCE
+        # Split backup text into paragraphs
+        paragraphs = [p.strip() for p in BACKUP_TEXT.split('\n') if p.strip()]
 
-    # 3. Process
-    passages = chunk_text(paragraphs)
+    # 3. Process Content
+    chunks = []
+    current_chunk = []
+    w_count = 0
+    
+    for p in paragraphs:
+        w_len = len(p.split())
+        current_chunk.append(p)
+        w_count += w_len
+        if w_count > 500:
+            chunks.append("\n\n".join(current_chunk))
+            current_chunk = []
+            w_count = 0
+    if current_chunk: chunks.append("\n\n".join(current_chunk))
+    
+    # 4. Generate JSON
     data = {
-        "metadata": {
-            "title": title,
-            "source": target_url,
-            "date_scraped": str(datetime.now().date())
-        },
+        "metadata": {"title": title, "source": url, "date_scraped": str(datetime.now().date())},
         "passages": []
     }
     
-    print(f"Generating AI questions for {len(passages)} passages...")
-    for i, p_text in enumerate(passages):
-        questions = generate_cat_questions(p_text)
+    print(f"Generating questions for {len(chunks)} passages...")
+    for i, txt in enumerate(chunks):
+        q = generate_cat_questions(txt)
         data["passages"].append({
-            "id": i + 1,
-            "text": p_text,
-            "questions": questions
+            "id": i+1,
+            "text": txt,
+            "questions": q
         })
         time.sleep(2)
 
-    # 4. Save
     with open('data.json', 'w') as f:
         json.dump(data, f, indent=4)
-    print("Success: data.json updated with REAL content.")
+    print("Success: data.json updated.")
 
 if __name__ == "__main__":
     main()
