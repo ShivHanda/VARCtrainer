@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aeon VARC Trainer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fcfbf9; color: #333; }
+        .reader-text { font-family: 'Merriweather', serif; line-height: 1.8; font-size: 1.125rem; }
+        .bionic b { font-weight: 700; color: #000; }
+        /* RSVP specific styles */
+        #rsvp-display { font-family: 'Merriweather', serif; font-size: 3rem; min-height: 120px; display: flex; align-items: center; justify-content: center; position: relative; }
+        #rsvp-display::after { content: ''; position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(255,0,0,0.1); transform: translateX(-50%); } /* Focus line */
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="border-b bg-white py-4 px-6 shadow-sm flex justify-between items-center">
+        <h1 class="text-xl font-bold tracking-tight text-gray-800">VARC<span class="text-indigo-600">Trainer</span></h1>
+        <div id="status-bar" class="text-sm text-gray-500">Loading...</div>
+    </header>
+
+    <main class="flex-grow container mx-auto max-w-3xl p-6">
+        
+        <div id="view-dashboard" class="space-y-6">
+            <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100">
+                <h2 id="essay-title" class="text-2xl font-serif font-bold text-gray-900 mb-2">Fetching Daily Essay...</h2>
+                <p id="essay-meta" class="text-gray-600 text-sm">Please wait while we load the data.</p>
+            </div>
+
+            <div id="passage-list" class="grid gap-4">
+                </div>
+        </div>
+
+        <div id="view-reader" class="hidden">
+            <button onclick="goHome()" class="text-sm text-gray-500 hover:text-indigo-600 mb-4">&larr; Back to Passages</button>
+            
+            <div class="bg-white p-4 rounded shadow-sm border mb-6 flex flex-wrap gap-4 items-center justify-between sticky top-4 z-10">
+                <div class="flex gap-2">
+                    <button onclick="setMode('normal')" class="px-3 py-1 text-sm rounded border bg-gray-100 hover:bg-gray-200 active-mode" id="btn-normal">Normal</button>
+                    <button onclick="setMode('bionic')" class="px-3 py-1 text-sm rounded border hover:bg-gray-200" id="btn-bionic">Bionic</button>
+                    <button onclick="setMode('rsvp')" class="px-3 py-1 text-sm rounded border hover:bg-gray-200" id="btn-rsvp">Speed (RSVP)</button>
+                </div>
+                <div class="flex items-center gap-2" id="rsvp-controls" style="display:none;">
+                    <span class="text-xs font-bold text-gray-500">WPM:</span>
+                    <input type="range" min="100" max="800" step="50" value="300" id="wpm-slider" class="w-24">
+                    <span id="wpm-display" class="text-xs font-mono w-8">300</span>
+                    <button onclick="toggleRSVP()" id="rsvp-play-btn" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm">Play</button>
+                </div>
+            </div>
+
+            <div id="reading-container" class="bg-white p-8 rounded-lg shadow-sm border min-h-[400px]">
+                <div id="text-display" class="reader-text text-gray-800">
+                    </div>
+                <div id="rsvp-display" class="hidden text-gray-900 text-center font-bold">
+                    </div>
+            </div>
+
+            <div class="mt-8 text-center">
+                <button onclick="finishReading()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded shadow">
+                    Finished Reading - Take Quiz
+                </button>
+            </div>
+        </div>
+
+        <div id="view-quiz" class="hidden space-y-8">
+            <div class="border-b pb-4">
+                <h2 class="text-2xl font-bold text-gray-800">Comprehension Check</h2>
+                <p class="text-gray-500">Answer based on the passage you just read.</p>
+            </div>
+            
+            <div id="quiz-container" class="space-y-8">
+                </div>
+
+            <div class="pt-6">
+                <button onclick="goHome()" class="bg-gray-800 text-white px-6 py-2 rounded hover:bg-gray-900">Load Next Passage</button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- STATE MANAGEMENT ---
+        let appData = null;
+        let currentPassageId = null;
+        let rsvpInterval = null;
+        let rsvpIndex = 0;
+        let rsvpRunning = false;
+        let wordsArray = [];
+
+        // --- INIT ---
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Fetch the JSON generated by Python
+                const response = await fetch('data.json');
+                if (!response.ok) throw new Error("Data not found");
+                appData = await response.json();
+                renderDashboard();
+            } catch (error) {
+                console.error(error);
+                document.getElementById('essay-title').innerText = "Waiting for Content...";
+                document.getElementById('essay-meta').innerText = "The scraper hasn't run yet or data.json is missing. Please run the GitHub Action.";
+            }
+        });
+
+        // --- DASHBOARD LOGIC ---
+        function renderDashboard() {
+            document.getElementById('status-bar').innerText = "Last Updated: " + appData.metadata.date_scraped;
+            document.getElementById('essay-title').innerText = appData.metadata.title;
+            document.getElementById('essay-meta').innerHTML = `<a href="${appData.metadata.source}" target="_blank" class="underline text-indigo-500">Read Original on Aeon</a>`;
+
+            const list = document.getElementById('passage-list');
+            list.innerHTML = '';
+
+            appData.passages.forEach((p, index) => {
+                const wordCount = p.text.split(' ').length;
+                const div = document.createElement('div');
+                div.className = "bg-white p-4 rounded border hover:shadow-md transition cursor-pointer flex justify-between items-center";
+                div.onclick = () => loadPassage(index);
+                div.innerHTML = `
+                    <div>
+                        <h3 class="font-bold text-gray-800">Passage ${index + 1}</h3>
+                        <p class="text-xs text-gray-500">${wordCount} words</p>
+                    </div>
+                    <span class="text-indigo-600 text-sm font-semibold">Start Reading &rarr;</span>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function goHome() {
+            stopRSVP();
+            showView('view-dashboard');
+        }
+
+        function showView(viewId) {
+            ['view-dashboard', 'view-reader', 'view-quiz'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        // --- READER LOGIC ---
+        function loadPassage(index) {
+            currentPassageId = index;
+            const text = appData.passages[index].text;
+            
+            // Reset Views
+            document.getElementById('text-display').innerHTML = text.replace(/\n/g, '<br>');
+            document.getElementById('text-display').classList.remove('hidden');
+            document.getElementById('rsvp-display').classList.add('hidden');
+            document.getElementById('rsvp-controls').style.display = 'none';
+            
+            // Default to Normal Mode
+            setMode('normal');
+            showView('view-reader');
+        }
+
+        function setMode(mode) {
+            const textDisplay = document.getElementById('text-display');
+            const rsvpDisplay = document.getElementById('rsvp-display');
+            const rsvpControls = document.getElementById('rsvp-controls');
+            const rawText = appData.passages[currentPassageId].text;
+
+            // Update Buttons UI
+            document.querySelectorAll('#view-reader button').forEach(b => b.classList.replace('bg-gray-300', 'bg-gray-100'));
+            
+            stopRSVP();
+
+            if (mode === 'normal') {
+                textDisplay.classList.remove('hidden', 'bionic');
+                rsvpDisplay.classList.add('hidden');
+                rsvpControls.style.display = 'none';
+                textDisplay.innerHTML = rawText.replace(/\n/g, '<br>');
+            } 
+            else if (mode === 'bionic') {
+                textDisplay.classList.remove('hidden');
+                textDisplay.classList.add('bionic');
+                rsvpDisplay.classList.add('hidden');
+                rsvpControls.style.display = 'none';
+                textDisplay.innerHTML = convertToBionic(rawText);
+            } 
+            else if (mode === 'rsvp') {
+                textDisplay.classList.add('hidden');
+                rsvpDisplay.classList.remove('hidden');
+                rsvpControls.style.display = 'flex';
+                wordsArray = rawText.split(/\s+/); // Prepare words
+                rsvpIndex = 0;
+                rsvpDisplay.innerText = "Press Play";
+            }
+        }
+
+        // --- BIONIC ALGORITHM ---
+        function convertToBionic(text) {
+            return text.split(' ').map(word => {
+                // Determine how many chars to bold (approx 40%)
+                const mid = Math.ceil(word.length * 0.4);
+                if (word.length < 2) return word;
+                return `<b>${word.slice(0, mid)}</b>${word.slice(mid)}`;
+            }).join(' ');
+        }
+
+        // --- RSVP LOGIC ---
+        const wpmSlider = document.getElementById('wpm-slider');
+        const wpmDisplay = document.getElementById('wpm-display');
+        
+        wpmSlider.oninput = function() {
+            wpmDisplay.innerText = this.value;
+            if(rsvpRunning) { stopRSVP(); startRSVP(); } // Restart to update speed
+        }
+
+        function toggleRSVP() {
+            if (rsvpRunning) stopRSVP();
+            else startRSVP();
+        }
+
+        function startRSVP() {
+            rsvpRunning = true;
+            document.getElementById('rsvp-play-btn').innerText = "Pause";
+            const wpm = parseInt(wpmSlider.value);
+            const msPerWord = 60000 / wpm;
+
+            rsvpInterval = setInterval(() => {
+                if (rsvpIndex >= wordsArray.length) {
+                    stopRSVP();
+                    return;
+                }
+                document.getElementById('rsvp-display').innerText = wordsArray[rsvpIndex];
+                rsvpIndex++;
+            }, msPerWord);
+        }
+
+        function stopRSVP() {
+            rsvpRunning = false;
+            document.getElementById('rsvp-play-btn').innerText = "Play";
+            clearInterval(rsvpInterval);
+        }
+
+        // --- QUIZ LOGIC ---
+        function finishReading() {
+            stopRSVP();
+            renderQuiz();
+            showView('view-quiz');
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+            
+            const questions = appData.passages[currentPassageId].questions;
+
+            if (!questions || questions.length === 0) {
+                container.innerHTML = "<div class='text-red-500'>No AI questions generated for this passage yet (Check API Key).</div>";
+                return;
+            }
+
+            questions.forEach((q, qIndex) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = "bg-white p-6 rounded border shadow-sm";
+                
+                let optionsHtml = '';
+                q.options.forEach((opt, oIndex) => {
+                    optionsHtml += `
+                        <label class="flex items-start gap-3 p-3 rounded hover:bg-gray-50 cursor-pointer border border-transparent hover:border-gray-200">
+                            <input type="radio" name="q-${qIndex}" value="${oIndex}" class="mt-1">
+                            <span class="text-gray-700">${opt}</span>
+                        </label>
+                    `;
+                });
+
+                qDiv.innerHTML = `
+                    <p class="font-bold text-lg mb-4 text-gray-900">Q${qIndex + 1}: ${q.question}</p>
+                    <div class="space-y-2 mb-4">${optionsHtml}</div>
+                    <div id="feedback-${qIndex}" class="hidden mt-4 p-4 bg-gray-50 rounded text-sm border-l-4"></div>
+                    <button onclick="checkAnswer(${qIndex}, ${q.correct_index})" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">Check Answer</button>
+                `;
+                container.appendChild(qDiv);
+            });
+        }
+
+        function checkAnswer(qIndex, correctIndex) {
+            const selected = document.querySelector(`input[name="q-${qIndex}"]:checked`);
+            const feedbackBox = document.getElementById(`feedback-${qIndex}`);
+            
+            if (!selected) return;
+
+            const userVal = parseInt(selected.value);
+            const explanation = appData.passages[currentPassageId].questions[qIndex].explanation || "No explanation provided.";
+
+            feedbackBox.classList.remove('hidden', 'border-green-500', 'border-red-500');
+            
+            if (userVal === correctIndex) {
+                feedbackBox.classList.add('border-green-500');
+                feedbackBox.innerHTML = `<strong class="text-green-700">Correct!</strong> <br> ${explanation}`;
+            } else {
+                feedbackBox.classList.add('border-red-500');
+                feedbackBox.innerHTML = `<strong class="text-red-700">Incorrect.</strong> <br> ${explanation}`;
+            }
+        }
+    </script>
+</body>
+</html>
