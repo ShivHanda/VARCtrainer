@@ -5,26 +5,15 @@ import os
 import google.generativeai as genai
 from datetime import datetime
 import time
-import random
-import re # Import regex for cleaner JSON extraction
+import re
 
 # --- CONFIG ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+if not GEMINI_API_KEY:
+    print("CRITICAL ERROR: GEMINI_API_KEY not found in Secrets.")
+    exit(1)
 
-# --- BACKUP CONTENT ---
-BACKUP_TITLE = "The case for idleness"
-BACKUP_SOURCE = "[https://aeon.co/essays/the-case-for-idleness](https://aeon.co/essays/the-case-for-idleness)"
-BACKUP_TEXT = """
-Work is the defining characteristic of our society. We are taught that the devil finds work for idle hands, and that we should always be busy. But is this true? For most of human history, leisure was the goal of life. The Greeks saw work as a means to an end, not an end in itself. Aristotle argued that we work in order to have leisure. Today, however, we have reversed this. We treat leisure as a time to recharge so that we can work more. 
-
-This obsession with productivity is damaging our mental health and our creativity. When we are constantly busy, we do not have time to think. Deep thought requires silence and stillness. It requires the ability to let the mind wander. History's greatest thinkers were often idlers. Bertrand Russell wrote a famous essay in praise of idleness, arguing that if we all worked four hours a day, there would be enough for everyone, and we would all have time to pursue our passions.
-
-The modern economy, however, is built on the consumption of goods and services, which requires constant production. We are trapped in a cycle of earning and spending. To break this, we need to redefine what it means to live a good life. We need to value time over money, and experiences over possessions. We need to learn how to do nothing.
-
-Doing nothing is not easy. We are addicted to stimulation. We reach for our phones the moment we are bored. But boredom is the gateway to creativity. When we are bored, our brains start to make new connections. We start to dream. If we want to solve the complex problems of the 21st century, we need more dreamers and fewer worker bees. We need to reclaim our right to be idle.
-"""
+genai.configure(api_key=GEMINI_API_KEY)
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -32,150 +21,161 @@ HEADERS = {
 }
 
 def get_latest_essay_from_rss():
-    rss_url = "[https://aeon.co/feed.rss](https://aeon.co/feed.rss)"
+    """Fetches the latest essay link from Aeon's RSS Feed."""
+    rss_url = "https://aeon.co/feed.rss"
     print(f"Checking RSS Feed: {rss_url}")
     try:
         response = requests.get(rss_url, headers=HEADERS, timeout=10)
         soup = BeautifulSoup(response.content, 'xml')
+        
         items = soup.find_all('item')
         for item in items:
             link = item.link.text
             if "/essays/" in link:
-                print(f"Found RSS Link: {link}")
-                return link
+                print(f"Found Essay: {item.title.text}")
+                return link, item.title.text
     except Exception as e:
         print(f"RSS Failed: {e}")
-    return None
+    return None, None
 
-def scrape_essay(url):
-    print(f"Scraping: {url}")
+def scrape_text_from_url(url):
+    print(f"Scraping Text: {url}")
     try:
         response = requests.get(url, headers=HEADERS, timeout=15)
         soup = BeautifulSoup(response.content, 'html.parser')
-        h1 = soup.find('h1')
-        title = h1.get_text(strip=True) if h1 else "Aeon Essay"
         
-        article = soup.find('div', class_='article__body')
-        if not article: article = soup
-             
-        paragraphs = article.find_all('p')
-        clean_text = []
-        for p in paragraphs:
-            txt = p.get_text(strip=True)
-            if len(txt.split()) > 25 and "subscribe" not in txt.lower():
-                clean_text.append(txt)
-                
-        if not clean_text: return None, None
-        return title, clean_text
+        # Smart Text Extraction
+        article_body = soup.find('div', class_='article__body')
+        if not article_body: article_body = soup
+            
+        paragraphs = [p.get_text(strip=True) for p in article_body.find_all('p')]
+        
+        # Filter garbage
+        clean_text = [p for p in paragraphs if len(p.split()) > 25 and "subscribe" not in p.lower()]
+        
+        if not clean_text: return None
+        return clean_text
     except Exception as e:
         print(f"Scrape Error: {e}")
-        return None, None
+        return None
 
-# --- ROBUST AI GENERATION ---
-def generate_cat_questions(text_chunk, retries=3):
-    if not GEMINI_API_KEY: return []
-    
+def clean_ai_json(raw_text):
+    """
+    Cleans the AI output to ensure it is valid JSON.
+    Removes markdown code blocks (```json ... ```).
+    """
+    # Remove markdown backticks
+    text = re.sub(r'```json', '', raw_text)
+    text = re.sub(r'```', '', text)
+    text = text.strip()
+    return text
+
+def generate_questions_real(text_chunk):
+    """Generates REAL questions using Gemini."""
     model = genai.GenerativeModel('gemini-1.5-flash')
+    
     prompt = f"""
-    You are a CAT (IIM) Exam Setter. Create 3 Reading Comprehension questions for this text.
+    You are a CAT (Common Admission Test) Exam Setter.
+    Create 3 high-quality Reading Comprehension questions based on the text below.
     
     TEXT:
     {text_chunk[:3000]}
     
-    REQUIREMENTS:
-    1. Question 1: Inference based.
-    2. Question 2: Main Idea / Structure.
-    3. Question 3: Detail based (Direct).
-    
-    OUTPUT FORMAT:
-    Return ONLY a raw JSON array. Do NOT use markdown formatting like ```json. Just the raw array [ ... ].
+    INSTRUCTIONS:
+    1. Output MUST be a valid JSON Array.
+    2. No Introduction. No Conclusion. JUST THE JSON.
+    3. Format:
     [
         {{
-            "question": "...",
-            "options": ["A", "B", "C", "D"],
+            "question": "Question text here?",
+            "options": ["Option A", "Option B", "Option C", "Option D"],
             "correct_index": 0,
-            "explanation": "..."
+            "explanation": "Explanation here."
         }}
     ]
     """
     
-    for attempt in range(retries):
-        try:
-            response = model.generate_content(prompt)
-            raw_text = response.text.strip()
+    try:
+        response = model.generate_content(prompt)
+        cleaned_json = clean_ai_json(response.text)
+        
+        # Validate JSON
+        data = json.loads(cleaned_json)
+        if isinstance(data, list) and len(data) > 0:
+            return data
+        else:
+            print("AI returned valid JSON but empty list.")
+            return []
             
-            # Cleaner: Remove markdown if AI adds it despite instructions
-            cleaned_text = re.sub(r"```json|```", "", raw_text).strip()
-            
-            questions = json.loads(cleaned_text)
-            
-            # Validate structure
-            if isinstance(questions, list) and len(questions) > 0 and "question" in questions[0]:
-                return questions
-            else:
-                 print(f"Attempt {attempt+1}: Invalid JSON structure generated.")
-
-        except Exception as e:
-            print(f"Attempt {attempt+1} Failed: {e}")
-            time.sleep(2 ** attempt) # Exponential backoff (wait 1s, 2s, 4s)
-            
-    print("Error: Failed to generate questions after all retries.")
-    # Return a dummy question so the frontend doesn't crash
-    return [{
-        "question": "AI Generation Failed for this passage. Please skip.",
-        "options": ["Skip", "Skip", "Skip", "Skip"],
-        "correct_index": 0,
-        "explanation": "Check API key or logs."
-    }]
+    except json.JSONDecodeError:
+        print(f"JSON Parse Error. Raw AI Output: {response.text[:100]}...")
+        return []
+    except Exception as e:
+        print(f"AI Gen Error: {e}")
+        return []
 
 def main():
-    url = get_latest_essay_from_rss()
-    title = None
-    paragraphs = None
-    
-    if url:
-        title, paragraphs = scrape_essay(url)
-    
-    if not paragraphs:
-        print("CRITICAL: Scraper failed. Loading BACKUP Content.")
-        title = BACKUP_TITLE
-        url = BACKUP_SOURCE
-        paragraphs = [p.strip() for p in BACKUP_TEXT.split('\n') if p.strip()]
+    # 1. Get URL
+    url, title = get_latest_essay_from_rss()
+    if not url:
+        print("Could not find any essay in RSS.")
+        return
 
+    # 2. Get Text
+    paragraphs = scrape_text_from_url(url)
+    if not paragraphs:
+        print("Could not scrape text.")
+        return
+
+    # 3. Chunk Text
     chunks = []
-    current_chunk = []
+    current = []
     w_count = 0
-    
     for p in paragraphs:
-        w_len = len(p.split())
-        current_chunk.append(p)
-        w_count += w_len
-        if w_count > 500:
-            chunks.append("\n\n".join(current_chunk))
-            current_chunk = []
+        current.append(p)
+        w_count += len(p.split())
+        if w_count > 600:
+            chunks.append("\n\n".join(current))
+            current = []
             w_count = 0
-    if current_chunk: chunks.append("\n\n".join(current_chunk))
+    if current: chunks.append("\n\n".join(current))
+
+    # 4. Generate AI Questions (THE REAL DEAL)
+    final_passages = []
+    print(f"Generating questions for {len(chunks)} passages...")
     
+    for i, chunk in enumerate(chunks):
+        print(f"Processing Chunk {i+1}/{len(chunks)}...")
+        questions = generate_questions_real(chunk)
+        
+        # Retry logic: If empty, try one more time
+        if not questions:
+            print("Retrying AI generation...")
+            time.sleep(2)
+            questions = generate_questions_real(chunk)
+            
+        final_passages.append({
+            "id": i+1,
+            "text": chunk,
+            "questions": questions # Should be real list now
+        })
+        
+        # Rate Limit Protection
+        time.sleep(4) 
+
+    # 5. Save Data
     data = {
-        "metadata": {"title": title, "source": url, "date_scraped": str(datetime.now().date())},
-        "passages": []
+        "metadata": {
+            "title": title,
+            "source": url,
+            "date_scraped": str(datetime.now().date())
+        },
+        "passages": final_passages
     }
     
-    print(f"Generating questions for {len(chunks)} passages. This will take time...")
-    for i, txt in enumerate(chunks):
-        print(f"Processing Passage {i+1}/{len(chunks)}...")
-        q = generate_cat_questions(txt)
-        data["passages"].append({
-            "id": i+1,
-            "text": txt,
-            "questions": q
-        })
-        # Important delay between AI calls
-        time.sleep(5)
-
     with open('data.json', 'w') as f:
         json.dump(data, f, indent=4)
-    print("Success: data.json updated with text AND questions.")
+    print("Success: Real data.json generated.")
 
 if __name__ == "__main__":
     main()
