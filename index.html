@@ -222,12 +222,68 @@
             currentPassageIdx = idx;
             const text = appData.passages[idx].text;
             wordCount = text.split(' ').length;
-            
-            // Format Text with Paragraphs
-            document.getElementById('text-display').innerHTML = text.split('\n\n').map(p => `<p class="mb-6">${p}</p>`).join('');
-            
+            document.getElementById('text-display').innerHTML = text.split('\n\n').map(p => `<p class="mb-8">${p}</p>`).join('');
+            rsvpWords = text.replace(/\n/g, ' ').split(/\s+/).filter(w => w.length > 0);
+            rsvpIndex = 0;
+            setReaderMode('normal');
             switchView('view-reader');
             startTimer();
+        }
+
+        function setReaderMode(mode) {
+            stopRSVP();
+            const btnNormal = document.getElementById('btn-mode-normal');
+            const btnRsvp = document.getElementById('btn-mode-rsvp');
+            if (mode === 'normal') {
+                document.getElementById('reading-container').classList.remove('hidden');
+                document.getElementById('rsvp-container').classList.add('hidden');
+                document.getElementById('rsvp-controls').classList.add('hidden');
+                // Updated Button Styles
+                btnNormal.classList.add('bg-primary', 'text-bg', 'shadow-sm');
+                btnNormal.classList.remove('text-secondary');
+                btnRsvp.classList.remove('bg-primary', 'text-bg', 'shadow-sm');
+                btnRsvp.classList.add('text-secondary');
+            } else {
+                document.getElementById('reading-container').classList.add('hidden');
+                document.getElementById('rsvp-container').classList.remove('hidden');
+                document.getElementById('rsvp-controls').classList.remove('hidden');
+                document.getElementById('rsvp-controls').classList.add('flex');
+                // Updated Button Styles
+                btnRsvp.classList.add('bg-primary', 'text-bg', 'shadow-sm');
+                btnRsvp.classList.remove('text-secondary');
+                btnNormal.classList.remove('bg-primary', 'text-bg', 'shadow-sm');
+                btnNormal.classList.add('text-secondary');
+                document.getElementById('rsvp-word').innerText = "Press Start";
+            }
+        }
+
+        const wpmSlider = document.getElementById('wpm-slider');
+        wpmSlider.oninput = function() {
+            document.getElementById('wpm-display').innerText = this.value + " WPM";
+            if(rsvpRunning) { stopRSVP(); toggleRSVP(); }
+        }
+
+        function toggleRSVP() {
+            if (rsvpRunning) { stopRSVP(); } else {
+                rsvpRunning = true;
+                document.getElementById('rsvp-toggle-btn').innerText = "STOP";
+                // Updated Button Style (Red for Stop)
+                document.getElementById('rsvp-toggle-btn').classList.replace('bg-accent', 'bg-red-500');
+                const wpm = parseInt(wpmSlider.value);
+                const intervalMs = 60000 / wpm;
+                rsvpInterval = setInterval(() => {
+                    if (rsvpIndex >= rsvpWords.length) { stopRSVP(); return; }
+                    document.getElementById('rsvp-word').innerText = rsvpWords[rsvpIndex++];
+                }, intervalMs);
+            }
+        }
+
+        function stopRSVP() {
+            rsvpRunning = false;
+            clearInterval(rsvpInterval);
+            document.getElementById('rsvp-toggle-btn').innerText = "START";
+            // Updated Button Style (Accent for Start)
+            document.getElementById('rsvp-toggle-btn').classList.replace('bg-red-500', 'bg-accent');
         }
 
         function startTimer() {
