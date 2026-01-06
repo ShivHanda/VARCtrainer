@@ -7,146 +7,132 @@ from datetime import datetime
 import time
 
 # --- CONFIG ---
-# GitHub Secret se API Key uthayega
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-else:
-    print("Warning: No API Key found. AI questions will be skipped.")
 
-def get_latest_essay_url():
-    """Fetches the very first essay link from Aeon's essays page."""
-    try:
-        url = "https://aeon.co/essays"
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        response = requests.get(url, headers=headers)
-        soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Finding the first link that looks like an essay
-        # Aeon structure changes, but usually links are inside 'a' tags with specific classes
-        # This is a generic finder for the first deep link
-        links = soup.find_all('a', href=True)
-        for link in links:
-            href = link['href']
-            if '/essays/' in href and href.count('/') == 2: # Basic filter
-                return f"https://aeon.co{href}"
-    except Exception as e:
-        print(f"Error finding latest essay: {e}")
-    
-    # Fallback if scraping fails
-    return "https://aeon.co/essays/how-to-be-a-stoic-when-you-don-t-know-how"
+# HARDCODED URL FOR STABILITY
+# We will target this specific essay first to ensure the system works.
+TARGET_URL = "https://aeon.co/essays/what-can-stone-age-tool-making-tell-us-about-the-evolution-of-language"
 
 def scrape_essay(url):
     print(f"Scraping: {url}")
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    response = requests.get(url, headers=headers)
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+    except Exception as e:
+        print(f"Failed to fetch page: {e}")
+        return "Error", []
+
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    title = soup.find('h1').get_text(strip=True) if soup.find('h1') else "Unknown Title"
+    # Get Title
+    title_tag = soup.find('h1')
+    title = title_tag.get_text(strip=True) if title_tag else "Aeon Essay (Title Not Found)"
     
-    article_body = soup.find('div', class_='article__body')
-    if not article_body:
-        # Fallback 
-        paragraphs = [p.get_text() for p in soup.find_all('p')]
-    else:
-        paragraphs = [p.get_text() for p in article_body.find_all('p')]
-        
-    # Clean logic: Remove short intro text/captions
-    clean_text = [p for p in paragraphs if len(p.split()) > 25]
+    # BRUTE FORCE TEXT EXTRACTION
+    # Instead of looking for a specific div, we look for ALL <p> tags.
+    # We then filter them. If a paragraph has > 30 words, it's likely essay content.
+    all_p = soup.find_all('p')
+    clean_text = []
+    
+    for p in all_p:
+        text = p.get_text(strip=True)
+        # Filter out menu items, footers, and short captions
+        if len(text.split()) > 30: 
+            clean_text.append(text)
+            
+    if not clean_text:
+        print("WARNING: No text found. The scraper failed to identify paragraphs.")
+        # Fallback for testing only
+        clean_text = ["This is a fallback paragraph because the scraper failed to read the website HTML structure properly."]
+
     return title, clean_text
 
-def chunk_text(paragraphs, chunk_size=600):
+def chunk_text(paragraphs, chunk_size=550):
     chunks = []
     current_chunk = []
     word_count = 0
     
     for p in paragraphs:
         w_len = len(p.split())
-        if word_count + w_len > chunk_size and word_count > 350:
+        # Add paragraph to chunk
+        current_chunk.append(p)
+        word_count += w_len
+        
+        # If chunk is big enough, seal it
+        if word_count >= chunk_size:
             chunks.append("\n\n".join(current_chunk))
-            current_chunk = [p]
-            word_count = w_len
-        else:
-            current_chunk.append(p)
-            word_count += w_len
+            current_chunk = []
+            word_count = 0
             
+    # Add any remaining text
     if current_chunk:
         chunks.append("\n\n".join(current_chunk))
     return chunks
 
 def generate_cat_questions(text_chunk):
-    """Uses Gemini to generate CAT VARC style questions."""
     if not GEMINI_API_KEY:
+        print("No API Key - skipping AI questions")
         return []
 
     model = genai.GenerativeModel('gemini-1.5-flash')
     
     prompt = f"""
-    You are a CAT (Common Admission Test) Exam Setter. 
-    Read the following passage and generate 3 high-quality multiple-choice questions based on it.
+    Generate 3 CAT-style Reading Comprehension questions based on this text.
+    Text: {text_chunk[:2000]}...
     
-    Passage:
-    {text_chunk}
-    
-    The questions must be of these specific types:
-    1. Inference based (Indirect conclusion)
-    2. Main Idea / Theme
-    3. Tone of the author OR Structure of argument
-    
-    Return the output strictly as a JSON array with this format (no markdown, just raw JSON):
+    Strict JSON format:
     [
         {{
-            "question": "Question text here...",
-            "options": ["Option A", "Option B", "Option C", "Option D"],
+            "question": "Question text?",
+            "options": ["A", "B", "C", "D"],
             "correct_index": 0,
-            "explanation": "Why A is correct..."
+            "explanation": "Why..."
         }}
     ]
     """
     
     try:
         response = model.generate_content(prompt)
-        # Clean up if AI puts ```json markdown
-        cleaned_text = response.text.replace("```json", "").replace("```", "").strip()
-        return json.loads(cleaned_text)
+        raw_text = response.text.replace("```json", "").replace("```", "").strip()
+        return json.loads(raw_text)
     except Exception as e:
-        print(f"AI Generation Error: {e}")
+        print(f"AI Error: {e}")
         return []
 
 def main():
-    url = get_latest_essay_url()
-    title, paragraphs = scrape_essay(url)
+    title, paragraphs = scrape_essay(TARGET_URL)
     passages = chunk_text(paragraphs)
     
     data = {
         "metadata": {
             "title": title,
-            "source": url,
+            "source": TARGET_URL,
             "date_scraped": str(datetime.now().date())
         },
         "passages": []
     }
     
-    print(f"Found {len(passages)} passages. Generating questions...")
+    print(f"Processing {len(passages)} passages...")
     
     for i, p_text in enumerate(passages):
-        # Generate AI questions for each chunk
-        ai_questions = generate_cat_questions(p_text)
-        
+        questions = generate_cat_questions(p_text)
         data["passages"].append({
             "id": i + 1,
             "text": p_text,
-            "questions": ai_questions
+            "questions": questions
         })
+        time.sleep(2) 
         
-        # Important: Sleep to avoid hitting API rate limits instantly
-        time.sleep(4) 
-        
-    # Save to JSON
     with open('data.json', 'w') as f:
         json.dump(data, f, indent=4)
-    print("Success: data.json created with AI questions.")
+    print("Done.")
 
 if __name__ == "__main__":
     main()
