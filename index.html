@@ -1,12 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VARC Trainer Pro</title>
-    
+    <title>VARC Trainer</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script>
@@ -31,16 +30,20 @@
     </script>
     <style>
         body { background-color: #0f172a; color: #e2e8f0; }
-        
-        /* RSVP Focus Lines */
-        .rsvp-container { position: relative; display: flex; align-items: center; justify-content: center; height: 350px; }
-        .rsvp-focus-top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 25px; background: #475569; }
-        .rsvp-focus-bottom { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 25px; background: #475569; }
-        
+        .selection-highlight { background-color: #312e81; color: white; }
         /* Tooltip for dictionary */
         #dict-tooltip {
-            position: absolute; background: #334155; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.875rem; z-index: 50;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #475569; max-width: 250px; display: none;
+            position: absolute;
+            background: #334155;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            z-index: 50;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #475569;
+            max-width: 250px;
+            display: none;
         }
     </style>
 </head>
@@ -50,8 +53,8 @@
 
     <nav class="border-b border-slate-800 bg-dark/80 backdrop-blur sticky top-0 z-40">
         <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
-                <div class="w-8 h-8 bg-accent text-dark rounded flex items-center justify-center font-bold font-mono">⚡</div>
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-accent text-dark rounded flex items-center justify-center font-bold font-mono">❀</div>
                 <span class="font-bold text-lg tracking-tight text-white">VARC<span class="text-accent">Trainer</span></span>
             </div>
             <div class="flex items-center gap-4">
@@ -71,13 +74,14 @@
                     <span class="inline-block px-2 py-1 bg-accent/10 text-accent text-xs font-bold tracking-wider rounded mb-4">DAILY ESSAY</span>
                     <h1 id="essay-title" class="text-2xl md:text-3xl font-serif font-bold text-white mb-4 leading-tight">Loading content...</h1>
                     <a id="source-btn" href="#" target="_blank" class="hidden inline-flex items-center gap-2 text-sm text-muted hover:text-white transition">
-                        Read Original <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        Read Original on Aeon
                     </a>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-card border border-slate-700 p-4 rounded-lg text-center opacity-50 cursor-not-allowed">
+                <div class="bg-card border border-slate-700 p-4 rounded-lg text-center opacity-50 cursor-not-allowed" title="Coming Soon">
                     <div class="text-xs text-muted uppercase">Schulte Tables</div>
                     <div class="text-lg font-mono font-bold">Coming Soon</div>
                 </div>
@@ -90,73 +94,262 @@
             <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-accent"></span> Today's Passages
             </h2>
-            <div id="passages-list" class="grid md:grid-cols-2 gap-6"></div>
+            <div id="passages-list" class="grid md:grid-cols-2 gap-6">
+                </div>
         </div>
 
         <div id="view-reader" class="hidden">
-            <div class="sticky top-20 z-30 mb-6 bg-card/90 backdrop-blur border border-slate-700 p-3 rounded-lg shadow-xl flex flex-wrap gap-4 justify-between items-center">
+            <div class="sticky top-20 z-30 mb-6 flex justify-between items-center bg-card/90 backdrop-blur border border-slate-700 p-3 rounded-lg shadow-xl">
+                <button onclick="goHome()" class="text-sm text-muted hover:text-white flex items-center gap-1">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg> Back
+                </button>
                 
-                <div class="flex items-center gap-3">
-                    <button onclick="goHome()" class="p-2 text-muted hover:text-white" title="Back">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-                    </button>
-                    
-                    <div class="bg-dark p-1 rounded flex border border-slate-800">
-                        <button onclick="setReaderMode('normal')" id="btn-mode-normal" class="px-3 py-1 text-xs font-bold rounded bg-slate-700 text-white transition">TEXT</button>
-                        <button onclick="setReaderMode('rsvp')" id="btn-mode-rsvp" class="px-3 py-1 text-xs font-bold rounded text-muted hover:text-white transition">SPEED</button>
-                    </div>
-                </div>
-                
-                <div id="rsvp-controls" class="hidden items-center gap-3 animate-fade-in">
+                <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2 bg-dark px-3 py-1 rounded border border-slate-800">
-                        <input type="range" min="200" max="800" step="50" value="300" id="wpm-slider" class="w-24 h-1 bg-slate-600 rounded appearance-none cursor-pointer accent-accent">
-                        <span id="wpm-display" class="font-mono text-xs font-bold text-accent">300 WPM</span>
+                        <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                        <span id="timer-display" class="font-mono text-lg font-bold text-white">00:00</span>
                     </div>
-                    <button onclick="toggleRSVP()" id="rsvp-toggle-btn" class="bg-accent text-dark px-4 py-1 rounded text-xs font-bold hover:bg-indigo-400 uppercase tracking-wide">Start</button>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <div class="hidden md:flex items-center gap-2 bg-dark px-3 py-1 rounded border border-slate-800">
-                        <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                        <span id="timer-display" class="font-mono text-sm font-bold text-white">00:00</span>
-                    </div>
-                    <button onclick="finishReading()" class="bg-white text-dark font-bold px-4 py-1.5 rounded text-sm hover:bg-gray-200 transition shadow-lg">
-                        Quiz &rarr;
-                    </button>
-                </div>
+                <button onclick="finishReading()" class="bg-accent hover:bg-indigo-400 text-dark font-bold px-4 py-1.5 rounded text-sm transition">
+                    Done
+                </button>
             </div>
 
             <div id="reading-container" class="max-w-3xl mx-auto">
-                <div class="text-xs text-muted text-center mb-4">Double-click words for meaning</div>
-                <div id="text-display" class="font-serif text-lg md:text-xl leading-relaxed text-slate-300 selection:bg-accent selection:text-dark"></div>
-            </div>
-
-            <div id="rsvp-container" class="hidden max-w-3xl mx-auto bg-card border border-slate-700 rounded-xl rsvp-container shadow-2xl">
-                <div class="rsvp-focus-top"></div>
-                <div id="rsvp-word" class="font-serif text-5xl md:text-6xl font-bold text-white tracking-wide">Ready</div>
-                <div class="rsvp-focus-bottom"></div>
+                <div class="text-xs text-muted text-center mb-2">Double-click any word for definition</div>
+                <div id="text-display" class="font-serif text-lg md:text-xl leading-relaxed text-slate-300 selection:bg-accent selection:text-dark">
+                    </div>
             </div>
         </div>
 
         <div id="view-quiz" class="hidden max-w-3xl mx-auto">
-            <div class="bg-gradient-to-br from-card to-dark border border-slate-700 rounded-xl p-6 mb-8 shadow-lg">
-                <h2 class="text-xl font-bold text-white mb-4">Analysis</h2>
+            
+            <div class="bg-gradient-to-br from-card to-dark border border-slate-700 rounded-xl p-6 mb-8">
+                <h2 class="text-xl font-bold text-white mb-4">Performance Analysis</h2>
                 <div class="grid grid-cols-3 gap-4 text-center">
                     <div class="p-3 bg-dark rounded border border-slate-800">
-                        <div class="text-xs text-muted uppercase">WPM</div>
+                        <div class="text-xs text-muted uppercase">Reading Speed</div>
                         <div class="text-2xl font-mono font-bold text-accent" id="res-wpm">0</div>
+                        <div class="text-xs text-muted">WPM</div>
                     </div>
                     <div class="p-3 bg-dark rounded border border-slate-800">
-                        <div class="text-xs text-muted uppercase">Tone</div>
+                        <div class="text-xs text-muted uppercase">Time Taken</div>
+                        <div class="text-2xl font-mono font-bold text-white" id="res-time">0:00</div>
+                        <div class="text-xs text-muted">MM:SS</div>
+                    </div>
+                    <div class="p-3 bg-dark rounded border border-slate-800">
+                        <div class="text-xs text-muted uppercase">Detected Tone</div>
                         <div class="text-lg font-serif italic text-white" id="res-tone">--</div>
-                    </div>
-                    <div class="p-3 bg-dark rounded border border-slate-800">
-                        <div class="text-xs text-muted uppercase">Summary</div>
-                        <div class="text-xs text-slate-300 line-clamp-2" id="res-summary">--</div>
                     </div>
                 </div>
             </div>
 
+            <div class="bg-card border border-slate-700 rounded-xl p-6 mb-8">
+                <div class="text-xs font-bold text-accent uppercase mb-2">AI Summary</div>
+                <p id="res-summary" class="text-slate-300 font-serif italic">Loading summary...</p>
+            </div>
+
             <div id="quiz-container" class="space-y-6"></div>
 
-            <button onclick="goHome()" class="mt-8
+            <button onclick="goHome()" class="mt-8 w-full py-4 rounded-lg border border-slate-700 hover:bg-slate-800 text-muted transition">
+                Load Next Passage
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        let appData = null;
+        let currentPassageIdx = 0;
+        let timerInterval;
+        let seconds = 0;
+        let wordCount = 0;
+
+        // --- INIT ---
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('data.json?t=' + Date.now());
+                if(!res.ok) throw new Error("Data file missing");
+                appData = await res.json();
+                
+                if(!appData.passages || appData.passages.length === 0) throw new Error("No passages found");
+                
+                renderDashboard();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('essay-title').innerText = "System Error";
+                document.getElementById('essay-title').classList.add("text-red-400");
+            }
+        });
+
+        // --- DASHBOARD ---
+        function renderDashboard() {
+            document.getElementById('sync-status').innerText = appData.metadata.date_scraped;
+            document.getElementById('essay-title').innerText = appData.metadata.title;
+            const srcBtn = document.getElementById('source-btn');
+            srcBtn.href = appData.metadata.source;
+            srcBtn.classList.remove('hidden');
+
+            const list = document.getElementById('passages-list');
+            list.innerHTML = '';
+
+            appData.passages.forEach((p, i) => {
+                const wCount = p.text.split(' ').length;
+                const estTime = Math.ceil(wCount / 250);
+                
+                const card = document.createElement('div');
+                card.className = "bg-card border border-slate-700 p-6 rounded-xl hover:border-accent transition cursor-pointer group";
+                card.onclick = () => startReading(i);
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-xs font-bold text-muted group-hover:text-accent transition">PASSAGE ${i+1}</span>
+                        <span class="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded">${wCount} words</span>
+                    </div>
+                    <p class="font-serif text-slate-400 line-clamp-3 mb-4 group-hover:text-slate-200 transition">
+                        ${p.text.substring(0, 120)}...
+                    </p>
+                    <div class="text-sm font-bold text-accent flex items-center gap-1">
+                        Begin <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        // --- READING LOGIC ---
+        function startReading(idx) {
+            currentPassageIdx = idx;
+            const text = appData.passages[idx].text;
+            wordCount = text.split(' ').length;
+            
+            // Format Text with Paragraphs
+            document.getElementById('text-display').innerHTML = text.split('\n\n').map(p => `<p class="mb-6">${p}</p>`).join('');
+            
+            switchView('view-reader');
+            startTimer();
+        }
+
+        function startTimer() {
+            seconds = 0;
+            document.getElementById('timer-display').innerText = "00:00";
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const secs = (seconds % 60).toString().padStart(2, '0');
+                document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function finishReading() {
+            clearInterval(timerInterval);
+            renderAnalysis();
+            switchView('view-quiz');
+        }
+
+        // --- ANALYSIS & QUIZ ---
+        function renderAnalysis() {
+            // WPM Calc
+            const mins = seconds / 60;
+            const wpm = mins > 0 ? Math.round(wordCount / mins) : wordCount;
+            
+            document.getElementById('res-wpm').innerText = wpm;
+            document.getElementById('res-time').innerText = document.getElementById('timer-display').innerText;
+            
+            const pData = appData.passages[currentPassageIdx];
+            document.getElementById('res-tone').innerText = pData.tone || "Not detected";
+            document.getElementById('res-summary').innerText = pData.summary || "No summary available.";
+
+            // Render Questions
+            const qContainer = document.getElementById('quiz-container');
+            qContainer.innerHTML = '';
+            
+            if(!pData.questions || pData.questions.length === 0) {
+                qContainer.innerHTML = "<div class='text-muted text-center'>Questions unavailable for this passage.</div>";
+                return;
+            }
+
+            pData.questions.forEach((q, i) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = "bg-card border border-slate-700 p-6 rounded-lg";
+                qDiv.innerHTML = `
+                    <div class="text-white font-bold mb-4"><span class="text-accent mr-2">Q${i+1}.</span> ${q.question}</div>
+                    <div class="space-y-2">
+                        ${q.options.map((opt, oi) => `
+                            <button onclick="checkAnswer(this, ${i}, ${oi})" class="w-full text-left p-3 rounded bg-slate-900 border border-slate-800 hover:border-slate-600 text-sm text-slate-300 transition">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="fb-${i}" class="hidden mt-4 p-3 rounded text-sm"></div>
+                `;
+                qContainer.appendChild(qDiv);
+            });
+        }
+
+        function checkAnswer(btn, qIdx, optIdx) {
+            const pData = appData.passages[currentPassageIdx];
+            const q = pData.questions[qIdx];
+            const fb = document.getElementById(`fb-${qIdx}`);
+            
+            // Reset styles for this question
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('border-green-500', 'border-red-500', 'text-white'));
+
+            fb.classList.remove('hidden', 'bg-green-900/50', 'bg-red-900/50', 'text-green-200', 'text-red-200');
+
+            if (optIdx === q.correct_index) {
+                btn.classList.add('border-green-500', 'text-white');
+                fb.classList.add('bg-green-900/50', 'text-green-200');
+                fb.innerHTML = `<strong>Correct.</strong> ${q.explanation}`;
+            } else {
+                btn.classList.add('border-red-500', 'text-white');
+                fb.classList.add('bg-red-900/50', 'text-red-200');
+                fb.innerHTML = `<strong>Incorrect.</strong> ${q.explanation}`;
+            }
+        }
+
+        // --- DICTIONARY FEATURE (Panic Button) ---
+        document.addEventListener('dblclick', async (e) => {
+            const sel = window.getSelection();
+            const word = sel.toString().trim();
+            if (word.length > 1 && /^[a-zA-Z]+$/.test(word)) {
+                const tooltip = document.getElementById('dict-tooltip');
+                tooltip.style.display = 'block';
+                tooltip.style.left = e.pageX + 'px';
+                tooltip.style.top = (e.pageY + 20) + 'px';
+                tooltip.innerHTML = "Loading definition...";
+                
+                try {
+                    const req = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                    if (!req.ok) throw new Error();
+                    const res = await req.json();
+                    const def = res[0].meanings[0].definitions[0].definition;
+                    tooltip.innerHTML = `<strong>${word}</strong>: ${def}`;
+                } catch (err) {
+                    tooltip.innerHTML = `Definition not found for "${word}"`;
+                    setTimeout(() => tooltip.style.display = 'none', 2000);
+                }
+            }
+        });
+
+        // Hide tooltip on click elsewhere
+        document.addEventListener('click', () => {
+            document.getElementById('dict-tooltip').style.display = 'none';
+        });
+
+        // --- UTILS ---
+        function switchView(id) {
+            ['view-dashboard', 'view-reader', 'view-quiz'].forEach(v => document.getElementById(v).classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
+
+        function goHome() {
+            clearInterval(timerInterval);
+            switchView('view-dashboard');
+        }
+    </script>
+</body>
+</html>
