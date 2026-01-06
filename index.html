@@ -5,84 +5,129 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aeon VARC Trainer</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                    },
+                    colors: {
+                        'paper': '#f9f7f1', // Classic reader background
+                        'ink': '#2c2c2c',   // Softer black
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #fcfbf9; color: #333; }
-        .reader-text { font-family: 'Merriweather', serif; line-height: 1.8; font-size: 1.125rem; }
+        /* Hide scrollbar for clean UI */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .bionic b { font-weight: 700; color: #000; }
-        /* RSVP specific styles */
-        #rsvp-display { font-family: 'Merriweather', serif; font-size: 3rem; min-height: 120px; display: flex; align-items: center; justify-content: center; position: relative; }
-        #rsvp-display::after { content: ''; position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(255,0,0,0.1); transform: translateX(-50%); } /* Focus line */
+        /* Reader focus line */
+        .rsvp-focus-line { position: absolute; top: 0; left: 50%; height: 100%; width: 2px; background-color: rgba(220, 38, 38, 0.1); transform: translateX(-50%); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="bg-paper text-ink min-h-screen flex flex-col antialiased selection:bg-yellow-200 selection:text-black">
 
-    <header class="border-b bg-white py-4 px-6 shadow-sm flex justify-between items-center">
-        <h1 class="text-xl font-bold tracking-tight text-gray-800">VARC<span class="text-indigo-600">Trainer</span></h1>
-        <div id="status-bar" class="text-sm text-gray-500">Loading...</div>
-    </header>
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="goHome()">
+                <div class="w-8 h-8 bg-black text-white rounded flex items-center justify-center font-serif font-bold text-lg">A</div>
+                <span class="font-bold text-lg tracking-tight">VARC<span class="text-gray-500 font-normal">Trainer</span></span>
+            </div>
+            <div id="status-bar" class="text-xs font-medium text-gray-400 uppercase tracking-wide">Syncing...</div>
+        </div>
+    </nav>
 
-    <main class="flex-grow container mx-auto max-w-3xl p-6">
+    <main class="flex-grow max-w-3xl mx-auto w-full p-6 mt-8">
         
-        <div id="view-dashboard" class="space-y-6">
-            <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100">
-                <h2 id="essay-title" class="text-2xl font-serif font-bold text-gray-900 mb-2">Fetching Daily Essay...</h2>
-                <p id="essay-meta" class="text-gray-600 text-sm">Please wait while we load the data.</p>
+        <div id="view-dashboard" class="animate-fade-in">
+            <div class="mb-12 text-center space-y-4">
+                <span class="bg-black text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Daily Pick</span>
+                <h1 id="essay-title" class="text-4xl md:text-5xl font-serif font-black leading-tight text-gray-900">
+                    Loading Essay...
+                </h1>
+                <p id="essay-meta" class="text-gray-500 italic">Curating content from Aeon.co</p>
+                <a id="source-link" href="#" target="_blank" class="hidden text-sm text-indigo-600 hover:text-indigo-800 underline decoration-1 underline-offset-4">Read Original Source</a>
             </div>
 
-            <div id="passage-list" class="grid gap-4">
+            <div id="passage-list" class="grid gap-6">
+                <div class="p-8 text-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+                    Fetching data from repository...
                 </div>
+            </div>
         </div>
 
         <div id="view-reader" class="hidden">
-            <button onclick="goHome()" class="text-sm text-gray-500 hover:text-indigo-600 mb-4">&larr; Back to Passages</button>
-            
-            <div class="bg-white p-4 rounded shadow-sm border mb-6 flex flex-wrap gap-4 items-center justify-between sticky top-4 z-10">
-                <div class="flex gap-2">
-                    <button onclick="setMode('normal')" class="px-3 py-1 text-sm rounded border bg-gray-100 hover:bg-gray-200 active-mode" id="btn-normal">Normal</button>
-                    <button onclick="setMode('bionic')" class="px-3 py-1 text-sm rounded border hover:bg-gray-200" id="btn-bionic">Bionic</button>
-                    <button onclick="setMode('rsvp')" class="px-3 py-1 text-sm rounded border hover:bg-gray-200" id="btn-rsvp">Speed (RSVP)</button>
+            <div class="sticky top-20 z-40 mb-8 flex justify-between items-center bg-white p-2 rounded-full shadow-lg border border-gray-100 mx-auto max-w-xl">
+                <button onclick="goHome()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition" title="Back">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                
+                <div class="flex gap-1 bg-gray-100 p-1 rounded-full">
+                    <button onclick="setMode('normal')" id="btn-normal" class="px-4 py-1.5 text-sm font-medium rounded-full bg-white shadow-sm transition">Read</button>
+                    <button onclick="setMode('bionic')" id="btn-bionic" class="px-4 py-1.5 text-sm font-medium rounded-full text-gray-500 hover:text-gray-900 transition">Bionic</button>
+                    <button onclick="setMode('rsvp')" id="btn-rsvp" class="px-4 py-1.5 text-sm font-medium rounded-full text-gray-500 hover:text-gray-900 transition">Speed</button>
                 </div>
-                <div class="flex items-center gap-2" id="rsvp-controls" style="display:none;">
-                    <span class="text-xs font-bold text-gray-500">WPM:</span>
-                    <input type="range" min="100" max="800" step="50" value="300" id="wpm-slider" class="w-24">
-                    <span id="wpm-display" class="text-xs font-mono w-8">300</span>
-                    <button onclick="toggleRSVP()" id="rsvp-play-btn" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm">Play</button>
+
+                <div class="w-10"></div> </div>
+
+            <div id="rsvp-controls" class="hidden mb-8 flex-col items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="text-6xl font-serif font-bold h-32 flex items-center justify-center w-full relative" id="rsvp-display-area">
+                    <div class="rsvp-focus-line"></div>
+                    <span id="rsvp-word" class="z-10 bg-white px-2">Ready</span>
+                </div>
+                <div class="flex items-center gap-4 w-full max-w-sm">
+                    <span class="text-xs font-bold text-gray-400">SLOW</span>
+                    <input type="range" min="200" max="600" step="50" value="300" id="wpm-slider" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black">
+                    <span class="text-xs font-bold text-gray-400">FAST</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="wpm-display" class="font-mono text-sm font-bold bg-gray-100 px-2 py-1 rounded">300 WPM</span>
+                    <button onclick="toggleRSVP()" id="rsvp-play-btn" class="bg-black text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-800 transition">Start</button>
                 </div>
             </div>
 
-            <div id="reading-container" class="bg-white p-8 rounded-lg shadow-sm border min-h-[400px]">
-                <div id="text-display" class="reader-text text-gray-800">
+            <article id="reading-container" class="prose prose-lg prose-slate max-w-none font-serif text-gray-800 leading-relaxed">
+                <div id="text-display" class="bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-gray-100">
                     </div>
-                <div id="rsvp-display" class="hidden text-gray-900 text-center font-bold">
-                    </div>
-            </div>
+            </article>
 
-            <div class="mt-8 text-center">
-                <button onclick="finishReading()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded shadow">
-                    Finished Reading - Take Quiz
+            <div class="mt-12 text-center pb-12">
+                <button onclick="finishReading()" class="group relative inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-500/30">
+                    <span>Take Comprehension Quiz</span>
+                    <svg class="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
             </div>
         </div>
 
-        <div id="view-quiz" class="hidden space-y-8">
-            <div class="border-b pb-4">
-                <h2 class="text-2xl font-bold text-gray-800">Comprehension Check</h2>
-                <p class="text-gray-500">Answer based on the passage you just read.</p>
+        <div id="view-quiz" class="hidden max-w-2xl mx-auto">
+            <div class="mb-8 border-b border-gray-200 pb-4">
+                <h2 class="text-3xl font-serif font-bold text-gray-900">Review</h2>
+                <p class="text-gray-500 mt-2">Test your understanding of the passage.</p>
             </div>
             
             <div id="quiz-container" class="space-y-8">
                 </div>
 
-            <div class="pt-6">
-                <button onclick="goHome()" class="bg-gray-800 text-white px-6 py-2 rounded hover:bg-gray-900">Load Next Passage</button>
+            <div class="mt-12 border-t pt-8 flex justify-between items-center pb-12">
+                <button onclick="goHome()" class="text-gray-500 hover:text-black font-medium transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    Back to Dashboard
+                </button>
+                <button onclick="goHome()" class="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 transition">Next Passage</button>
             </div>
         </div>
 
     </main>
 
     <script>
-        // --- STATE MANAGEMENT ---
+        // --- APP LOGIC ---
         let appData = null;
         let currentPassageId = null;
         let rsvpInterval = null;
@@ -90,49 +135,66 @@
         let rsvpRunning = false;
         let wordsArray = [];
 
-        // --- INIT ---
         window.addEventListener('DOMContentLoaded', async () => {
             try {
-                // Fetch the JSON generated by Python
-                const response = await fetch('data.json');
-                if (!response.ok) throw new Error("Data not found");
+                // ADDED CACHE BUSTING (?t=...) to force load new JSON
+                const response = await fetch('data.json?t=' + new Date().getTime());
+                if (!response.ok) throw new Error("Data file missing");
+                
                 appData = await response.json();
+                
+                // Check if data is valid
+                if(!appData.passages || appData.passages.length === 0) {
+                   throw new Error("Data file is empty or corrupted.");
+                }
+
                 renderDashboard();
             } catch (error) {
                 console.error(error);
-                document.getElementById('essay-title').innerText = "Waiting for Content...";
-                document.getElementById('essay-meta').innerText = "The scraper hasn't run yet or data.json is missing. Please run the GitHub Action.";
+                document.getElementById('essay-title').innerText = "System Error";
+                document.getElementById('essay-meta').innerHTML = `<span class="text-red-500">Could not load content. The scraper might have failed.</span><br><span class="text-xs text-gray-400">${error.message}</span>`;
             }
         });
 
-        // --- DASHBOARD LOGIC ---
         function renderDashboard() {
-            document.getElementById('status-bar').innerText = "Last Updated: " + appData.metadata.date_scraped;
+            const date = new Date(appData.metadata.date_scraped).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('status-bar').innerText = date;
             document.getElementById('essay-title').innerText = appData.metadata.title;
-            document.getElementById('essay-meta').innerHTML = `<a href="${appData.metadata.source}" target="_blank" class="underline text-indigo-500">Read Original on Aeon</a>`;
+            document.getElementById('source-link').href = appData.metadata.source;
+            document.getElementById('source-link').classList.remove('hidden');
 
             const list = document.getElementById('passage-list');
             list.innerHTML = '';
 
             appData.passages.forEach((p, index) => {
                 const wordCount = p.text.split(' ').length;
-                const div = document.createElement('div');
-                div.className = "bg-white p-4 rounded border hover:shadow-md transition cursor-pointer flex justify-between items-center";
-                div.onclick = () => loadPassage(index);
-                div.innerHTML = `
-                    <div>
-                        <h3 class="font-bold text-gray-800">Passage ${index + 1}</h3>
-                        <p class="text-xs text-gray-500">${wordCount} words</p>
+                const readTime = Math.ceil(wordCount / 250); // Avg reading speed
+                
+                const card = document.createElement('div');
+                card.className = "group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer relative overflow-hidden";
+                card.onclick = () => loadPassage(index);
+                card.innerHTML = `
+                    <div class="absolute top-0 left-0 w-1 h-full bg-gray-100 group-hover:bg-black transition-colors"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="font-sans text-xs font-bold text-gray-400 uppercase tracking-wider">Passage ${index + 1}</span>
+                        <span class="text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded-md">${readTime} min read</span>
                     </div>
-                    <span class="text-indigo-600 text-sm font-semibold">Start Reading &rarr;</span>
+                    <p class="font-serif text-gray-600 line-clamp-3 leading-relaxed mb-6 group-hover:text-gray-900 transition-colors">
+                        ${p.text.substring(0, 150)}...
+                    </p>
+                    <div class="flex items-center text-indigo-600 font-bold text-sm group-hover:translate-x-1 transition-transform">
+                        Start Reading <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    </div>
                 `;
-                list.appendChild(div);
+                list.appendChild(card);
             });
         }
 
-        function goHome() {
-            stopRSVP();
-            showView('view-dashboard');
+        function loadPassage(index) {
+            currentPassageId = index;
+            showView('view-reader');
+            setMode('normal'); // Default to normal
+            window.scrollTo(0,0);
         }
 
         function showView(viewId) {
@@ -142,73 +204,63 @@
             document.getElementById(viewId).classList.remove('hidden');
         }
 
-        // --- READER LOGIC ---
-        function loadPassage(index) {
-            currentPassageId = index;
-            const text = appData.passages[index].text;
-            
-            // Reset Views
-            document.getElementById('text-display').innerHTML = text.replace(/\n/g, '<br>');
-            document.getElementById('text-display').classList.remove('hidden');
-            document.getElementById('rsvp-display').classList.add('hidden');
-            document.getElementById('rsvp-controls').style.display = 'none';
-            
-            // Default to Normal Mode
-            setMode('normal');
-            showView('view-reader');
+        function goHome() {
+            stopRSVP();
+            showView('view-dashboard');
         }
 
+        // --- READER MODES ---
         function setMode(mode) {
             const textDisplay = document.getElementById('text-display');
-            const rsvpDisplay = document.getElementById('rsvp-display');
             const rsvpControls = document.getElementById('rsvp-controls');
             const rawText = appData.passages[currentPassageId].text;
-
-            // Update Buttons UI
-            document.querySelectorAll('#view-reader button').forEach(b => b.classList.replace('bg-gray-300', 'bg-gray-100'));
             
+            // Buttons State
+            ['normal', 'bionic', 'rsvp'].forEach(m => {
+                const btn = document.getElementById(`btn-${m}`);
+                if(m === mode) {
+                    btn.classList.replace('text-gray-500', 'text-white');
+                    btn.classList.replace('bg-white', 'bg-black');
+                    btn.classList.remove('hover:text-gray-900');
+                } else {
+                    btn.classList.replace('text-white', 'text-gray-500');
+                    btn.classList.replace('bg-black', 'bg-white');
+                    btn.classList.add('hover:text-gray-900');
+                }
+            });
+
             stopRSVP();
 
             if (mode === 'normal') {
-                textDisplay.classList.remove('hidden', 'bionic');
-                rsvpDisplay.classList.add('hidden');
-                rsvpControls.style.display = 'none';
-                textDisplay.innerHTML = rawText.replace(/\n/g, '<br>');
+                textDisplay.classList.remove('hidden');
+                rsvpControls.classList.add('hidden');
+                textDisplay.innerHTML = `<p>${rawText.replace(/\n\n/g, '</p><p class="mt-4">')}</p>`;
             } 
             else if (mode === 'bionic') {
                 textDisplay.classList.remove('hidden');
-                textDisplay.classList.add('bionic');
-                rsvpDisplay.classList.add('hidden');
-                rsvpControls.style.display = 'none';
-                textDisplay.innerHTML = convertToBionic(rawText);
-            } 
+                rsvpControls.classList.add('hidden');
+                const bionicText = rawText.split(' ').map(w => {
+                    const mid = Math.ceil(w.length * 0.4);
+                    return `<b>${w.slice(0, mid)}</b>${w.slice(mid)}`;
+                }).join(' ');
+                textDisplay.innerHTML = `<p>${bionicText.replace(/\n\n/g, '</p><p class="mt-4">')}</p>`;
+            }
             else if (mode === 'rsvp') {
                 textDisplay.classList.add('hidden');
-                rsvpDisplay.classList.remove('hidden');
-                rsvpControls.style.display = 'flex';
-                wordsArray = rawText.split(/\s+/); // Prepare words
+                rsvpControls.classList.remove('hidden');
+                rsvpControls.classList.add('flex');
+                wordsArray = rawText.replace(/\n/g, ' ').split(/\s+/).filter(w => w.length > 0);
                 rsvpIndex = 0;
-                rsvpDisplay.innerText = "Press Play";
+                document.getElementById('rsvp-word').innerText = "Press Start";
             }
         }
 
-        // --- BIONIC ALGORITHM ---
-        function convertToBionic(text) {
-            return text.split(' ').map(word => {
-                // Determine how many chars to bold (approx 40%)
-                const mid = Math.ceil(word.length * 0.4);
-                if (word.length < 2) return word;
-                return `<b>${word.slice(0, mid)}</b>${word.slice(mid)}`;
-            }).join(' ');
-        }
-
-        // --- RSVP LOGIC ---
+        // --- RSVP ENGINE ---
         const wpmSlider = document.getElementById('wpm-slider');
-        const wpmDisplay = document.getElementById('wpm-display');
         
         wpmSlider.oninput = function() {
-            wpmDisplay.innerText = this.value;
-            if(rsvpRunning) { stopRSVP(); startRSVP(); } // Restart to update speed
+            document.getElementById('wpm-display').innerText = this.value + " WPM";
+            if(rsvpRunning) { stopRSVP(); startRSVP(); }
         }
 
         function toggleRSVP() {
@@ -217,88 +269,66 @@
         }
 
         function startRSVP() {
+            if(rsvpIndex >= wordsArray.length) rsvpIndex = 0;
             rsvpRunning = true;
             document.getElementById('rsvp-play-btn').innerText = "Pause";
+            document.getElementById('rsvp-play-btn').classList.replace('bg-black', 'bg-red-600');
+            
             const wpm = parseInt(wpmSlider.value);
-            const msPerWord = 60000 / wpm;
+            const ms = 60000 / wpm;
 
             rsvpInterval = setInterval(() => {
                 if (rsvpIndex >= wordsArray.length) {
                     stopRSVP();
                     return;
                 }
-                document.getElementById('rsvp-display').innerText = wordsArray[rsvpIndex];
+                document.getElementById('rsvp-word').innerText = wordsArray[rsvpIndex];
                 rsvpIndex++;
-            }, msPerWord);
+            }, ms);
         }
 
         function stopRSVP() {
             rsvpRunning = false;
-            document.getElementById('rsvp-play-btn').innerText = "Play";
             clearInterval(rsvpInterval);
+            document.getElementById('rsvp-play-btn').innerText = "Start";
+            document.getElementById('rsvp-play-btn').classList.replace('bg-red-600', 'bg-black');
         }
 
-        // --- QUIZ LOGIC ---
+        // --- QUIZ ENGINE ---
         function finishReading() {
             stopRSVP();
-            renderQuiz();
+            const questions = appData.passages[currentPassageId].questions;
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+
+            if(!questions || questions.length === 0) {
+                 container.innerHTML = `<div class="p-4 bg-yellow-50 text-yellow-800 rounded">AI could not generate questions for this passage. Try the next one.</div>`;
+                 showView('view-quiz');
+                 return;
+            }
+
+            questions.forEach((q, i) => {
+                const el = document.createElement('div');
+                el.className = "bg-white p-6 md:p-8 rounded-xl border border-gray-100 shadow-sm";
+                let optionsHtml = q.options.map((opt, optIdx) => `
+                    <label class="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition border border-transparent hover:border-gray-200">
+                        <div class="flex h-5 items-center">
+                            <input type="radio" name="q-${i}" value="${optIdx}" class="h-4 w-4 border-gray-300 text-black focus:ring-black">
+                        </div>
+                        <span class="text-sm md:text-base text-gray-700 leading-relaxed">${opt}</span>
+                    </label>
+                `).join('');
+
+                el.innerHTML = `
+                    <h3 class="font-serif font-bold text-lg text-gray-900 mb-4">${i+1}. ${q.question}</h3>
+                    <div class="space-y-2 mb-6">${optionsHtml}</div>
+                    <div id="feedback-${i}" class="hidden p-4 rounded-lg text-sm bg-gray-50"></div>
+                    <button onclick="checkAnswer(${i}, ${q.correct_index})" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-wide">Check Answer</button>
+                `;
+                container.appendChild(el);
+            });
             showView('view-quiz');
         }
 
-        function renderQuiz() {
-            const container = document.getElementById('quiz-container');
-            container.innerHTML = '';
-            
-            const questions = appData.passages[currentPassageId].questions;
-
-            if (!questions || questions.length === 0) {
-                container.innerHTML = "<div class='text-red-500'>No AI questions generated for this passage yet (Check API Key).</div>";
-                return;
-            }
-
-            questions.forEach((q, qIndex) => {
-                const qDiv = document.createElement('div');
-                qDiv.className = "bg-white p-6 rounded border shadow-sm";
-                
-                let optionsHtml = '';
-                q.options.forEach((opt, oIndex) => {
-                    optionsHtml += `
-                        <label class="flex items-start gap-3 p-3 rounded hover:bg-gray-50 cursor-pointer border border-transparent hover:border-gray-200">
-                            <input type="radio" name="q-${qIndex}" value="${oIndex}" class="mt-1">
-                            <span class="text-gray-700">${opt}</span>
-                        </label>
-                    `;
-                });
-
-                qDiv.innerHTML = `
-                    <p class="font-bold text-lg mb-4 text-gray-900">Q${qIndex + 1}: ${q.question}</p>
-                    <div class="space-y-2 mb-4">${optionsHtml}</div>
-                    <div id="feedback-${qIndex}" class="hidden mt-4 p-4 bg-gray-50 rounded text-sm border-l-4"></div>
-                    <button onclick="checkAnswer(${qIndex}, ${q.correct_index})" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">Check Answer</button>
-                `;
-                container.appendChild(qDiv);
-            });
-        }
-
-        function checkAnswer(qIndex, correctIndex) {
-            const selected = document.querySelector(`input[name="q-${qIndex}"]:checked`);
-            const feedbackBox = document.getElementById(`feedback-${qIndex}`);
-            
-            if (!selected) return;
-
-            const userVal = parseInt(selected.value);
-            const explanation = appData.passages[currentPassageId].questions[qIndex].explanation || "No explanation provided.";
-
-            feedbackBox.classList.remove('hidden', 'border-green-500', 'border-red-500');
-            
-            if (userVal === correctIndex) {
-                feedbackBox.classList.add('border-green-500');
-                feedbackBox.innerHTML = `<strong class="text-green-700">Correct!</strong> <br> ${explanation}`;
-            } else {
-                feedbackBox.classList.add('border-red-500');
-                feedbackBox.innerHTML = `<strong class="text-red-700">Incorrect.</strong> <br> ${explanation}`;
-            }
-        }
-    </script>
-</body>
-</html>
+        function checkAnswer(qIdx, correctIdx) {
+            const selected = document.querySelector(`input[name="q-${q
