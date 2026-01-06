@@ -35,7 +35,7 @@
         .rsvp-container { position: relative; display: flex; align-items: center; justify-content: center; height: 350px; }
         .rsvp-focus-top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 25px; background: #475569; }
         .rsvp-focus-bottom { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 25px; background: #475569; }
-
+        
         /* Tooltip for dictionary */
         #dict-tooltip {
             position: absolute;
@@ -58,7 +58,7 @@
 
     <nav class="border-b border-slate-800 bg-dark/80 backdrop-blur sticky top-0 z-40">
         <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
+            <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-accent text-dark rounded flex items-center justify-center font-bold font-mono">⚡</div>
                 <span class="font-bold text-lg tracking-tight text-white">VARC<span class="text-accent">Trainer</span></span>
             </div>
@@ -124,7 +124,7 @@
                     </div>
                     <button onclick="toggleRSVP()" id="rsvp-toggle-btn" class="bg-accent text-dark px-4 py-1 rounded text-xs font-bold hover:bg-indigo-400 uppercase tracking-wide">Start</button>
                 </div>
-
+                
                 <div class="flex items-center gap-4">
                     <div class="hidden md:flex items-center gap-2 bg-dark px-3 py-1 rounded border border-slate-800">
                         <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
@@ -258,3 +258,155 @@
             rsvpIndex = 0;
 
             // 3. Reset UI
+            setReaderMode('normal');
+            switchView('view-reader');
+            startTimer();
+        }
+
+        function setReaderMode(mode) {
+            stopRSVP(); // Stop if running
+            
+            const btnNormal = document.getElementById('btn-mode-normal');
+            const btnRsvp = document.getElementById('btn-mode-rsvp');
+            
+            if (mode === 'normal') {
+                // Show Text, Hide RSVP
+                document.getElementById('reading-container').classList.remove('hidden');
+                document.getElementById('rsvp-container').classList.add('hidden');
+                document.getElementById('rsvp-controls').classList.add('hidden');
+                
+                // Button Styling (Dark Theme)
+                btnNormal.classList.add('bg-slate-700', 'text-white');
+                btnNormal.classList.remove('text-muted');
+                btnRsvp.classList.remove('bg-slate-700', 'text-white');
+                btnRsvp.classList.add('text-muted');
+                
+            } else {
+                // Show RSVP, Hide Text
+                document.getElementById('reading-container').classList.add('hidden');
+                document.getElementById('rsvp-container').classList.remove('hidden');
+                document.getElementById('rsvp-controls').classList.remove('hidden');
+                document.getElementById('rsvp-controls').classList.add('flex');
+                
+                // Button Styling (Dark Theme)
+                btnRsvp.classList.add('bg-slate-700', 'text-white');
+                btnRsvp.classList.remove('text-muted');
+                btnNormal.classList.remove('bg-slate-700', 'text-white');
+                btnNormal.classList.add('text-muted');
+                
+                document.getElementById('rsvp-word').innerText = "Press Start";
+            }
+        }
+
+        // --- RSVP / SPEED READER ENGINE ---
+        const wpmSlider = document.getElementById('wpm-slider');
+        
+        wpmSlider.oninput = function() {
+            document.getElementById('wpm-display').innerText = this.value + " WPM";
+            if(rsvpRunning) {
+                stopRSVP();
+                toggleRSVP();
+            }
+        }
+
+        function toggleRSVP() {
+            if (rsvpRunning) {
+                stopRSVP();
+            } else {
+                rsvpRunning = true;
+                document.getElementById('rsvp-toggle-btn').innerText = "STOP";
+                document.getElementById('rsvp-toggle-btn').classList.replace('bg-accent', 'bg-red-500');
+                
+                const wpm = parseInt(wpmSlider.value);
+                const intervalMs = 60000 / wpm;
+
+                rsvpInterval = setInterval(() => {
+                    if (rsvpIndex >= rsvpWords.length) {
+                        stopRSVP();
+                        return;
+                    }
+                    document.getElementById('rsvp-word').innerText = rsvpWords[rsvpIndex];
+                    rsvpIndex++;
+                }, intervalMs);
+            }
+        }
+
+        function stopRSVP() {
+            rsvpRunning = false;
+            clearInterval(rsvpInterval);
+            document.getElementById('rsvp-toggle-btn').innerText = "START";
+            document.getElementById('rsvp-toggle-btn').classList.replace('bg-red-500', 'bg-accent');
+        }
+
+        // --- TIMER ---
+        function startTimer() {
+            seconds = 0;
+            document.getElementById('timer-display').innerText = "00:00";
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const secs = (seconds % 60).toString().padStart(2, '0');
+                document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function finishReading() {
+            stopRSVP();
+            clearInterval(timerInterval);
+            renderAnalysis();
+            switchView('view-quiz');
+        }
+
+        // --- ANALYSIS & QUIZ ---
+        function renderAnalysis() {
+            // WPM Calc
+            const mins = seconds / 60;
+            const wpm = mins > 0 ? Math.round(wordCount / mins) : wordCount;
+            document.getElementById('res-wpm').innerText = wpm;
+            document.getElementById('res-time').innerText = document.getElementById('timer-display').innerText;
+            
+            const pData = appData.passages[currentPassageIdx];
+            document.getElementById('res-tone').innerText = pData.tone || "Not detected";
+            document.getElementById('res-summary').innerText = pData.summary || "No summary available.";
+
+            // Render Questions
+            const qContainer = document.getElementById('quiz-container');
+            qContainer.innerHTML = '';
+            
+            if(!pData.questions || pData.questions.length === 0) {
+                qContainer.innerHTML = "<div class='text-muted text-center'>Questions unavailable for this passage.</div>";
+                return;
+            }
+
+            pData.questions.forEach((q, i) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = "bg-card border border-slate-700 p-6 rounded-lg";
+                qDiv.innerHTML = `
+                    <div class="text-white font-bold mb-4"><span class="text-accent mr-2">Q${i+1}.</span> ${q.question}</div>
+                    <div class="space-y-2">
+                        ${q.options.map((opt, oi) => `
+                            <button onclick="checkAnswer(this, ${i}, ${oi})" class="w-full text-left p-3 rounded bg-slate-900 border border-slate-800 hover:border-slate-600 text-sm text-slate-300 transition">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="fb-${i}" class="hidden mt-4 p-3 rounded text-sm"></div>
+                `;
+                qContainer.appendChild(qDiv);
+            });
+        }
+
+        function checkAnswer(btn, qIdx, optIdx) {
+            const pData = appData.passages[currentPassageIdx];
+            const q = pData.questions[qIdx];
+            const fb = document.getElementById(`fb-${qIdx}`);
+            
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('border-green-500', 'border-red-500', 'text-white'));
+
+            fb.classList.remove('hidden', 'bg-green-900/50', 'bg-red-900/50', 'text-green-200', 'text-red-200');
+
+            if (optIdx === q.correct_index) {
+                btn.classList.add('border-green-500', 'text-white');
+                fb.classList.add('bg-green-900/50', 'text
