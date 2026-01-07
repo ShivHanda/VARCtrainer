@@ -14,50 +14,49 @@
             theme: {
                 extend: {
                     colors: {
-                        // Cozy & Warm Palette
-                        bg: '#FDFCF8',       // Cream background
-                        card: '#FFFFFF',     // White cards
-                        primary: '#4A3F35',  // Dark Brown text
-                        secondary: '#8C7B6E',// Softer Brown text
-                        accent: '#D97706',   // Warm Orange accent (like candlelight)
-                        highlight: '#FDE68A', // Soft yellow for selections
-                        border: '#E5E1DA'    // Light beige border
+                        bg: '#FDFCF8',       
+                        card: '#FFFFFF',     
+                        primary: '#4A3F35',  
+                        secondary: '#8C7B6E',
+                        accent: '#D97706',   
+                        highlight: '#FDE68A', 
+                        border: '#E5E1DA'    
                     },
                     fontFamily: {
                         serif: ['Merriweather', 'serif'],
                         sans: ['Inter', 'sans-serif']
                     },
                     boxShadow: {
-                        'soft': '0 4px 20px -2px rgba(74, 63, 53, 0.08)', // Softer shadow
+                        'soft': '0 4px 20px -2px rgba(74, 63, 53, 0.08)',
                     }
                 }
             }
         }
-        .schulte-cell { transition: all 0.1s ease; user-select: none; }
-        .schulte-cell:active { transform: scale(0.95); }
     </script>
     <style>
         body { background-color: #FDFCF8; color: #4A3F35; }
         ::selection { background-color: #FDE68A; color: #4A3F35; }
+        .no-scroll { overflow: hidden !important; }
         
-        /* RSVP Focus Lines (Warm) */
         .rsvp-container { position: relative; display: flex; align-items: center; justify-content: center; height: 350px; }
         .rsvp-focus-top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 25px; background: #D97706; opacity: 0.5; }
         .rsvp-focus-bottom { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 25px; background: #D97706; opacity: 0.5; }
         
-        /* Tooltip for dictionary (Warm) */
         #dict-tooltip {
             position: absolute; background: #FFFFFF; color: #4A3F35; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; z-index: 50;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #E5E1DA; max-width: 260px; display: none;
         }
+        
+        .schulte-cell { transition: all 0.1s ease; user-select: none; }
+        .schulte-cell:active { transform: scale(0.95); }
     </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased font-sans">
 
     <div id="dict-tooltip"></div>
 
-    <nav class="border-b border-border bg-bg/80 backdrop-blur-md sticky top-0 z-40">
-        <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+    <nav class="border-b border-border bg-bg/80 backdrop-blur-md sticky top-0 z-40 h-16 flex-none">
+        <div class="max-w-5xl mx-auto px-6 h-full flex items-center justify-between">
             <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
                 <span class="text-2xl">📚</span>
                 <span class="font-bold text-lg tracking-tight text-primary">VARC<span class="text-accent">Trainer</span></span>
@@ -68,9 +67,9 @@
         </div>
     </nav>
 
-    <main class="flex-grow max-w-5xl mx-auto w-full p-6">
+    <main class="flex-grow w-full max-w-5xl mx-auto p-4 md:p-6 overflow-y-auto" id="main-container">
 
-        <div id="view-dashboard" class="animate-fade-in">
+        <div id="view-dashboard" class="animate-fade-in pb-10">
             <div class="bg-card rounded-3xl p-8 md:p-10 mb-10 border border-border shadow-soft relative overflow-hidden">
                 <div class="absolute top-0 right-0 -mt-10 -mr-10 opacity-5">
                      <svg width="200" height="200" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
@@ -84,8 +83,7 @@
                 </div>
             </div>
 
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">                
                 <div onclick="initSchulte()" class="bg-card border border-border p-4 rounded-2xl text-center hover:shadow-soft hover:border-accent transition-all cursor-pointer group relative top-0 hover:-top-1 flex flex-col items-center justify-center h-full">
                     <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🔢</div>
                     <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1 group-hover:text-accent">Schulte Tables</div>
@@ -93,10 +91,11 @@
                 </div>
 
                 <div onclick="initSaccade()" class="bg-card border border-border p-4 rounded-2xl text-center hover:shadow-soft hover:border-accent transition-all cursor-pointer group relative top-0 hover:-top-1 flex flex-col items-center justify-center h-full">
-                    <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">👀</div>
-                    <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1 group-hover:text-accent">Saccade Jumps</div>
-                    <div class="text-sm font-bold text-primary">Train Eyes &rarr;</div>
+                     <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">👀</div>
+                     <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1 group-hover:text-accent">Saccade Jumps</div>
+                     <div class="text-sm font-bold text-primary">Train Eyes &rarr;</div>
                 </div>
+
                 <a href="https://shivhanda.github.io/Sudoku/" target="_blank" class="bg-card border border-border p-4 rounded-2xl text-center hover:shadow-soft hover:border-accent transition-all group relative top-0 hover:-top-1 cursor-pointer flex flex-col items-center justify-center h-32">
                     <div class="w-8 h-8 grid grid-cols-3 gap-0.5 mb-2 border border-stone-300 p-0.5 rounded">
                         <div class="bg-stone-300 rounded-[1px]"></div><div class="bg-orange-500 rounded-[1px]"></div><div class="bg-stone-300 rounded-[1px]"></div>
@@ -105,7 +104,8 @@
                     </div>
                     <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1 group-hover:text-accent transition-colors">Daily Sudoku</div>
                     <div class="text-sm font-bold text-primary group-hover:text-accent transition-colors">Play &rarr;</div>
-                </a>               
+                </a>
+
             </div>
 
             <h2 class="text-xl font-bold text-primary mb-6 flex items-center gap-3">
@@ -115,7 +115,7 @@
         </div>
 
         <div id="view-reader" class="hidden">
-            <div class="sticky top-20 z-30 mb-8 bg-card/90 backdrop-blur border border-border p-3 rounded-2xl shadow-soft flex flex-wrap gap-4 justify-between items-center">
+            <div class="sticky top-4 z-30 mb-8 bg-card/90 backdrop-blur border border-border p-3 rounded-2xl shadow-soft flex flex-wrap gap-4 justify-between items-center">
                 
                 <div class="flex items-center gap-3">
                     <button onclick="goHome()" class="p-2 text-secondary hover:text-primary transition" title="Back">
@@ -130,16 +130,21 @@
                 
                 <div id="rsvp-controls" class="hidden items-center gap-4 animate-fade-in">
                     <div class="flex items-center gap-3 bg-bg px-4 py-1.5 rounded-xl border border-border">
-                        <input type="range" min="100" max="400" step="50" value="200" id="wpm-slider" class="w-24 h-1.5 bg-border rounded-full appearance-none cursor-pointer accent-accent">
-                        <span id="wpm-display" class="font-mono text-xs font-bold text-accent">200 WPM</span>
+                        <input type="range" min="100" max="600" step="50" value="300" id="wpm-slider" class="w-24 h-1.5 bg-border rounded-full appearance-none cursor-pointer accent-accent">
+                        <span id="wpm-display" class="font-mono text-xs font-bold text-accent">300 WPM</span>
                     </div>
                     <button onclick="toggleRSVP()" id="rsvp-toggle-btn" class="bg-accent text-white px-5 py-1.5 rounded-xl text-xs font-bold hover:bg-orange-600 shadow-sm uppercase tracking-wide transition">Start</button>
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <div class="hidden md:flex items-center gap-2 bg-bg px-4 py-1.5 rounded-xl border border-border">
-                        <span class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></span>
-                        <span id="timer-display" class="font-mono text-sm font-bold text-primary">00:00</span>
+                    <div class="hidden md:flex items-center gap-3 bg-bg px-4 py-1.5 rounded-xl border border-border">
+                        <button onclick="toggleTimer()" id="timer-btn" title="Pause/Resume Timer" class="text-primary hover:text-accent transition">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <span id="timer-dot" class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></span>
+                            <span id="timer-display" class="font-mono text-sm font-bold text-primary">00:00</span>
+                        </div>
                     </div>
                     <button onclick="finishReading()" class="bg-primary text-bg font-bold px-5 py-2 rounded-xl text-sm hover:bg-primary/90 transition shadow-soft">
                         Quiz &rarr;
@@ -160,42 +165,48 @@
             </div>
         </div>
 
-        <div id="view-schulte" class="hidden max-w-2xl mx-auto">
-            <div class="mb-6 flex justify-between items-center">
+        <div id="view-schulte" class="hidden flex flex-col h-[calc(100vh-6rem)]">
+            <div class="flex justify-between items-center mb-4 shrink-0">
                 <button onclick="goHome()" class="text-secondary hover:text-primary">&larr; Dashboard</button>
-                <div class="font-mono text-xl font-bold text-accent" id="schulte-timer">0.00s</div>
+                <div class="font-mono text-2xl font-bold text-accent" id="schulte-timer">0.00s</div>
+                <button onclick="initSchulte()" class="px-4 py-1 bg-bg border border-border rounded-lg text-xs font-bold uppercase hover:bg-card">Reset</button>
             </div>
             
-            <div class="bg-card border border-border p-6 rounded-3xl shadow-soft">
-                <h2 class="text-center text-primary font-bold mb-4">Find numbers 1 to 25 in order</h2>
-                <div id="schulte-grid" class="grid grid-cols-5 gap-3 aspect-square max-w-md mx-auto">
-                    </div>
+            <div class="flex-grow flex items-center justify-center relative">
+                <div class="bg-card border border-border p-4 rounded-3xl shadow-soft w-full max-w-md aspect-square flex flex-col justify-center">
+                    <div id="schulte-grid" class="grid grid-cols-5 gap-2 w-full h-full"></div>
+                </div>
+                <div id="schulte-overlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm hidden flex-col items-center justify-center rounded-3xl z-10">
+                    <div class="text-4xl mb-2">🎉</div>
+                    <div class="text-2xl font-bold text-primary mb-2">Complete!</div>
+                    <div class="text-accent font-mono text-xl mb-4" id="schulte-final-time">0.00s</div>
+                    <button onclick="initSchulte()" class="px-6 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary/90">Play Again</button>
+                </div>
             </div>
-            <div id="schulte-msg" class="text-center mt-6 text-xl font-bold text-accent h-8"></div>
-            <button onclick="initSchulte()" class="block mx-auto mt-6 px-6 py-2 bg-bg border border-border rounded-xl text-secondary hover:text-primary font-bold">Reset</button>
+            <div id="schulte-msg" class="text-center mt-4 text-lg font-bold text-accent h-6 shrink-0">Find 1</div>
         </div>
 
-        <div id="view-saccade" class="hidden max-w-4xl mx-auto">
-            <div class="mb-6 flex justify-between items-center">
+        <div id="view-saccade" class="hidden flex flex-col h-[calc(100vh-6rem)]">
+            <div class="mb-4 flex justify-between items-center shrink-0">
                 <button onclick="goHome()" class="text-secondary hover:text-primary">&larr; Dashboard</button>
                 <div class="flex items-center gap-2 bg-card px-4 py-2 rounded-xl border border-border">
                     <span class="text-xs font-bold text-secondary">SPEED</span>
-                    <input type="range" min="40" max="200" value="60" id="saccade-speed" class="w-32 h-1.5 bg-border rounded-full accent-accent">
+                    <input type="range" min="40" max="200" value="60" id="saccade-speed" class="w-32 h-1.5 bg-border rounded-full accent-accent cursor-pointer">
                 </div>
             </div>
 
-            <div class="bg-card border border-border rounded-3xl shadow-soft h-[60vh] relative flex items-center justify-between px-10 md:px-20 overflow-hidden">
-                <div id="sac-left" class="w-8 h-8 rounded-full bg-primary opacity-20 transition-opacity duration-100"></div>
-                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-secondary text-sm opacity-50">Keep head still, move eyes only</div>
-                <div id="sac-right" class="w-8 h-8 rounded-full bg-primary opacity-20 transition-opacity duration-100"></div>
+            <div class="bg-card border border-border rounded-3xl shadow-soft flex-grow relative overflow-hidden">
+                <div id="sac-left" class="absolute left-10 md:left-20 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-orange-600 opacity-20 scale-90 transition-all duration-100 shadow-sm"></div>
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-secondary/40 text-sm font-medium">Keep head still</div>
+                <div id="sac-right" class="absolute right-10 md:right-20 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-orange-600 opacity-20 scale-90 transition-all duration-100 shadow-sm"></div>
             </div>
             
-            <div class="text-center mt-6">
-                <button onclick="toggleSaccade()" id="sac-btn" class="px-8 py-3 bg-accent text-white rounded-xl font-bold shadow-soft hover:bg-orange-600 transition">START</button>
+            <div class="text-center mt-6 shrink-0">
+                <button onclick="toggleSaccade()" id="sac-btn" class="px-10 py-3 bg-primary text-white rounded-xl font-bold shadow-soft hover:bg-primary/90 transition tracking-widest">START</button>
             </div>
         </div>
 
-        <div id="view-quiz" class="hidden max-w-3xl mx-auto">
+        <div id="view-quiz" class="hidden max-w-3xl mx-auto pb-10">
             <div class="bg-card border border-border rounded-3xl p-8 mb-10 shadow-soft">
                 <h2 class="text-2xl font-bold text-primary mb-6 flex items-center gap-2">Performance Analysis</h2>
                 <div class="grid grid-cols-3 gap-6 text-center">
@@ -204,7 +215,7 @@
                         <div class="text-3xl font-mono font-bold text-accent" id="res-wpm">0</div>
                     </div>
                     <div class="p-4 bg-bg rounded-2xl border border-border">
-                        <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Time Taken</div>
+                        <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Time</div>
                         <div class="text-lg font-serif italic text-primary" id="res-time">0:00</div>
                     </div>
                     <div class="p-4 bg-bg rounded-2xl border border-border">
@@ -214,9 +225,9 @@
                 </div>
             </div>
             <div class="bg-card border border-border rounded-3xl p-8 mb-10 shadow-soft">
-                        <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Summary</div>
-                        <div class="text-xs text-secondary line-clamp-3 leading-relaxed" id="res-summary">--</div>
-                    </div>
+                <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Summary</div>
+                <div class="text-xs text-secondary line-clamp-3 leading-relaxed" id="res-summary">--</div>
+            </div>
 
             <h3 class="text-xl font-bold text-primary mb-6">Comprehension Check</h3>
             <div id="quiz-container" class="space-y-8"></div>
@@ -229,24 +240,21 @@
     </main>
 
     <script>
-        // ... (SCRIPT REMAINS EXACTLY THE SAME AS BEFORE) ...
-        // Copy the entire <script> block from the previous dark aesthetic version
-        // and paste it here. The logic doesn't need to change, only the HTML/CSS above.
-        
         let appData = null;
         let currentPassageIdx = 0;
         let timerInterval;
         let seconds = 0;
+        let isTimerPaused = false;
         let wordCount = 0;
         let rsvpRunning = false;
         let rsvpInterval;
         let rsvpWords = [];
         let rsvpIndex = 0;
-        // Schulte Vars
+        
+        // Schulte & Saccade Vars
         let schulteNext = 1;
         let schulteStart = 0;
         let schulteTimerInt;
-        // Saccade Vars
         let saccadeInt;
         let saccadeActive = false;
 
@@ -277,7 +285,6 @@
             appData.passages.forEach((p, i) => {
                 const wCount = p.text.split(' ').length;
                 const card = document.createElement('div');
-                // Updated Card Styling for Warm Theme
                 card.className = "bg-card border border-border p-6 rounded-2xl hover:shadow-soft transition-all cursor-pointer group relative top-0 hover:-top-1";
                 card.onclick = () => startReading(i);
                 card.innerHTML = `
@@ -296,6 +303,110 @@
             });
         }
 
+        // --- SCHULTE LOGIC ---
+        function initSchulte() {
+            switchView('view-schulte');
+            schulteNext = 1;
+            document.getElementById('schulte-msg').innerText = "Find 1";
+            document.getElementById('schulte-timer').innerText = "0.00s";
+            document.getElementById('schulte-overlay').classList.add('hidden');
+            document.getElementById('schulte-overlay').classList.remove('flex');
+            clearInterval(schulteTimerInt);
+            
+            const grid = document.getElementById('schulte-grid');
+            grid.innerHTML = '';
+            
+            let nums = Array.from({length: 25}, (_, i) => i + 1);
+            nums.sort(() => Math.random() - 0.5);
+
+            nums.forEach(n => {
+                const cell = document.createElement('div');
+                cell.className = "schulte-cell bg-bg border border-border rounded-xl flex items-center justify-center text-xl md:text-2xl font-bold text-primary cursor-pointer hover:bg-bg/50 select-none shadow-sm h-full w-full";
+                cell.innerText = n;
+                cell.onclick = () => handleSchulteClick(cell, n);
+                grid.appendChild(cell);
+            });
+
+            schulteStart = Date.now();
+            schulteTimerInt = setInterval(() => {
+                const diff = (Date.now() - schulteStart) / 1000;
+                document.getElementById('schulte-timer').innerText = diff.toFixed(2) + "s";
+            }, 50);
+        }
+
+        function handleSchulteClick(cell, num) {
+            if (num === schulteNext) {
+                // Correct
+                cell.classList.remove('bg-bg', 'border-border');
+                cell.classList.add('bg-green-100', 'border-green-400', 'text-green-800');
+                setTimeout(() => cell.classList.remove('bg-green-100', 'border-green-400', 'text-green-800'), 200);
+                schulteNext++;
+                if (schulteNext > 25) {
+                    clearInterval(schulteTimerInt);
+                    document.getElementById('schulte-msg').innerText = "Complete!";
+                }
+            } else {
+                // Wrong
+                cell.classList.add('bg-red-100');
+                setTimeout(() => cell.classList.remove('bg-red-100'), 200);
+            }
+        }
+
+        // --- SACCADE LOGIC ---
+        function initSaccade() {
+            switchView('view-saccade');
+            stopSaccade();
+        }
+
+        function toggleSaccade() {
+            if (saccadeActive) stopSaccade();
+            else startSaccade();
+        }
+
+        function startSaccade() {
+            saccadeActive = true;
+            document.getElementById('sac-btn').innerText = "STOP";
+            document.getElementById('sac-btn').classList.replace('bg-primary', 'bg-red-500');
+            
+            const speed = parseInt(document.getElementById('saccade-speed').value);
+            const interval = 60000 / speed;
+            let side = 0; 
+
+            document.getElementById('sac-left').classList.replace('opacity-20', 'opacity-100');
+            
+            saccadeInt = setInterval(() => {
+                const l = document.getElementById('sac-left');
+                const r = document.getElementById('sac-right');
+                
+                if (side === 0) { 
+                    l.classList.replace('opacity-100', 'opacity-20');
+                    r.classList.replace('opacity-20', 'opacity-100');
+                    side = 1;
+                } else { 
+                    r.classList.replace('opacity-100', 'opacity-20');
+                    l.classList.replace('opacity-20', 'opacity-100');
+                    side = 0;
+                }
+            }, interval);
+        }
+
+        function stopSaccade() {
+            saccadeActive = false;
+            clearInterval(saccadeInt);
+            document.getElementById('sac-btn').innerText = "START";
+            document.getElementById('sac-btn').classList.replace('bg-red-500', 'bg-primary');
+            document.getElementById('sac-left').classList.replace('opacity-100', 'opacity-20');
+            document.getElementById('sac-right').classList.replace('opacity-100', 'opacity-20');
+        }
+        
+        document.getElementById('saccade-speed').oninput = function() {
+            if(saccadeActive) {
+                clearInterval(saccadeInt);
+                startSaccade();
+            }
+        }
+
+        // --- READER LOGIC ---
         function startReading(idx) {
             currentPassageIdx = idx;
             const text = appData.passages[idx].text;
@@ -303,8 +414,13 @@
             document.getElementById('text-display').innerHTML = text.split('\n\n').map(p => `<p class="mb-8">${p}</p>`).join('');
             rsvpWords = text.replace(/\n/g, ' ').split(/\s+/).filter(w => w.length > 0);
             rsvpIndex = 0;
+            
             setReaderMode('normal');
             switchView('view-reader');
+            
+            seconds = 0;
+            isTimerPaused = false;
+            updateTimerUI(true);
             startTimer();
         }
 
@@ -316,7 +432,6 @@
                 document.getElementById('reading-container').classList.remove('hidden');
                 document.getElementById('rsvp-container').classList.add('hidden');
                 document.getElementById('rsvp-controls').classList.add('hidden');
-                // Updated Button Styles
                 btnNormal.classList.add('bg-primary', 'text-bg', 'shadow-sm');
                 btnNormal.classList.remove('text-secondary');
                 btnRsvp.classList.remove('bg-primary', 'text-bg', 'shadow-sm');
@@ -326,7 +441,6 @@
                 document.getElementById('rsvp-container').classList.remove('hidden');
                 document.getElementById('rsvp-controls').classList.remove('hidden');
                 document.getElementById('rsvp-controls').classList.add('flex');
-                // Updated Button Styles
                 btnRsvp.classList.add('bg-primary', 'text-bg', 'shadow-sm');
                 btnRsvp.classList.remove('text-secondary');
                 btnNormal.classList.remove('bg-primary', 'text-bg', 'shadow-sm');
@@ -345,7 +459,6 @@
             if (rsvpRunning) { stopRSVP(); } else {
                 rsvpRunning = true;
                 document.getElementById('rsvp-toggle-btn').innerText = "STOP";
-                // Updated Button Style (Red for Stop)
                 document.getElementById('rsvp-toggle-btn').classList.replace('bg-accent', 'bg-red-500');
                 const wpm = parseInt(wpmSlider.value);
                 const intervalMs = 60000 / wpm;
@@ -360,19 +473,40 @@
             rsvpRunning = false;
             clearInterval(rsvpInterval);
             document.getElementById('rsvp-toggle-btn').innerText = "START";
-            // Updated Button Style (Accent for Start)
             document.getElementById('rsvp-toggle-btn').classList.replace('bg-red-500', 'bg-accent');
         }
 
+        // --- TIMER LOGIC (Manual Start/Stop) ---
+        function toggleTimer() {
+            isTimerPaused = !isTimerPaused;
+            updateTimerUI(!isTimerPaused);
+        }
+
+        function updateTimerUI(isRunning) {
+            const btn = document.getElementById('timer-btn');
+            const dot = document.getElementById('timer-dot');
+            if (isRunning) {
+                // Show Pause Icon
+                btn.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+                dot.classList.add('animate-pulse', 'bg-red-400');
+                dot.classList.remove('bg-gray-400');
+            } else {
+                // Show Play Icon
+                btn.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+                dot.classList.remove('animate-pulse', 'bg-red-400');
+                dot.classList.add('bg-gray-400');
+            }
+        }
+
         function startTimer() {
-            seconds = 0;
-            document.getElementById('timer-display').innerText = "00:00";
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
-                seconds++;
-                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-                const secs = (seconds % 60).toString().padStart(2, '0');
-                document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+                if(!isTimerPaused) {
+                    seconds++;
+                    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                    const secs = (seconds % 60).toString().padStart(2, '0');
+                    document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+                }
             }, 1000);
         }
 
@@ -400,15 +534,12 @@
             }
             pData.questions.forEach((q, i) => {
                 const qDiv = document.createElement('div');
-                // Updated Quiz Card Style
                 qDiv.className = "bg-card border border-border p-8 rounded-2xl shadow-soft";
                 qDiv.innerHTML = `
                     <div class="text-primary font-bold text-lg mb-6 leading-relaxed"><span class="text-accent mr-2">Q${i+1}.</span> ${q.question}</div>
                     <div class="space-y-3">
                         ${q.options.map((opt, oi) => `
-                            <button onclick="checkAnswer(this, ${i}, ${oi})" class="w-full text-left p-4 rounded-xl bg-bg border border-border hover:border-accent/50 text-primary transition font-medium leading-relaxed relative top-0 hover:-top-0.5">
-                                ${opt}
-                            </button>
+                            <button onclick="checkAnswer(this, ${i}, ${oi})" class="w-full text-left p-4 rounded-xl bg-bg border border-border hover:border-accent/50 text-primary transition font-medium leading-relaxed relative top-0 hover:-top-0.5">${opt}</button>
                         `).join('')}
                     </div>
                     <div id="fb-${i}" class="hidden mt-6 p-4 rounded-xl text-sm font-medium leading-relaxed"></div>
@@ -422,21 +553,17 @@
             const q = pData.questions[qIdx];
             const fb = document.getElementById(`fb-${qIdx}`);
             const allBtns = btn.parentElement.querySelectorAll('button');
-            // Reset styles (Warm Theme)
             allBtns.forEach(b => {
                 b.classList.remove('border-green-500', 'bg-green-50', 'text-green-800', 'border-red-500', 'bg-red-50', 'text-red-800');
                 b.classList.add('border-border', 'bg-bg', 'text-primary');
             });
             fb.classList.remove('hidden', 'bg-green-50', 'text-green-800', 'bg-red-50', 'text-red-800');
-
             btn.classList.remove('border-border', 'bg-bg', 'text-primary');
             if (optIdx === q.correct_index) {
-                // Correct Style (Warm Green)
                 btn.classList.add('border-green-500', 'bg-green-50', 'text-green-800');
                 fb.classList.add('bg-green-50', 'text-green-800');
                 fb.innerHTML = `<strong class="block mb-1">Correct.</strong> ${q.explanation}`;
             } else {
-                // Incorrect Style (Warm Red)
                 btn.classList.add('border-red-500', 'bg-red-50', 'text-red-800');
                 fb.classList.add('bg-red-50', 'text-red-800');
                 fb.innerHTML = `<strong class="block mb-1">Incorrect.</strong> ${q.explanation}`;
@@ -469,112 +596,13 @@
                 document.getElementById('dict-tooltip').style.display = 'none';
             }
         });
-        // --- SCHULTE TABLES LOGIC ---
-        function initSchulte() {
-            switchView('view-schulte');
-            schulteNext = 1;
-            document.getElementById('schulte-msg').innerText = "";
-            document.getElementById('schulte-timer').innerText = "0.00s";
-            clearInterval(schulteTimerInt);
-            
-            const grid = document.getElementById('schulte-grid');
-            grid.innerHTML = '';
-            
-            // Create array 1-25 and shuffle
-            let nums = Array.from({length: 25}, (_, i) => i + 1);
-            nums.sort(() => Math.random() - 0.5);
-
-            nums.forEach(n => {
-                const cell = document.createElement('div');
-                cell.className = "schulte-cell bg-bg border-2 border-border rounded-xl flex items-center justify-center text-2xl font-bold text-primary cursor-pointer hover:bg-card";
-                cell.innerText = n;
-                cell.onclick = () => handleSchulteClick(cell, n);
-                grid.appendChild(cell);
-            });
-
-            schulteStart = Date.now();
-            schulteTimerInt = setInterval(() => {
-                const diff = (Date.now() - schulteStart) / 1000;
-                document.getElementById('schulte-timer').innerText = diff.toFixed(2) + "s";
-            }, 50);
-        }
-
-        function handleSchulteClick(cell, num) {
-            if (num === schulteNext) {
-                // Correct
-                cell.classList.remove('bg-bg', 'border-border');
-                cell.classList.add('bg-green-100', 'border-green-400', 'text-green-800');
-                setTimeout(() => cell.classList.remove('bg-green-100', 'border-green-400', 'text-green-800'), 200);
-                schulteNext++;
-                if (schulteNext > 25) {
-                    clearInterval(schulteTimerInt);
-                    document.getElementById('schulte-msg').innerText = "Complete!";
-                }
-            } else {
-                // Wrong
-                cell.classList.add('bg-red-100');
-                setTimeout(() => cell.classList.remove('bg-red-100'), 200);
-            }
-        }
-
-        // --- SACCADE JUMPS LOGIC ---
-        function initSaccade() {
-            switchView('view-saccade');
-            stopSaccade();
-        }
-
-        function toggleSaccade() {
-            if (saccadeActive) stopSaccade();
-            else startSaccade();
-        }
-
-        function startSaccade() {
-            saccadeActive = true;
-            document.getElementById('sac-btn').innerText = "STOP";
-            document.getElementById('sac-btn').classList.replace('bg-accent', 'bg-red-500');
-            
-            const speed = parseInt(document.getElementById('saccade-speed').value); // BPM
-            const interval = 60000 / speed;
-            let side = 0; // 0 left, 1 right
-
-            // Initial state
-            document.getElementById('sac-left').classList.replace('opacity-20', 'opacity-100');
-            
-            saccadeInt = setInterval(() => {
-                const l = document.getElementById('sac-left');
-                const r = document.getElementById('sac-right');
-                
-                if (side === 0) { // Switch to Right
-                    l.classList.replace('opacity-100', 'opacity-20');
-                    r.classList.replace('opacity-20', 'opacity-100');
-                    side = 1;
-                } else { // Switch to Left
-                    r.classList.replace('opacity-100', 'opacity-20');
-                    l.classList.replace('opacity-20', 'opacity-100');
-                    side = 0;
-                }
-            }, interval);
-        }
-
-        function stopSaccade() {
-            saccadeActive = false;
-            clearInterval(saccadeInt);
-            document.getElementById('sac-btn').innerText = "START";
-            document.getElementById('sac-btn').classList.replace('bg-red-500', 'bg-accent');
-            document.getElementById('sac-left').classList.replace('opacity-100', 'opacity-20');
-            document.getElementById('sac-right').classList.replace('opacity-100', 'opacity-20');
-        }
-        
-        // Update speed on the fly
-        document.getElementById('saccade-speed').oninput = function() {
-            if(saccadeActive) {
-                clearInterval(saccadeInt);
-                startSaccade();
-            }
-        }
         function switchView(id) {
             ['view-dashboard', 'view-reader', 'view-quiz', 'view-schulte', 'view-saccade'].forEach(v => document.getElementById(v).classList.add('hidden'));
+            
+            // FIX: Handle Scrolling for Game Views
+            const main = document.getElementById('main-container');
             document.getElementById(id).classList.remove('hidden');
+            
             if (id === 'view-schulte' || id === 'view-saccade') {
                 main.classList.add('no-scroll');
             } else {
