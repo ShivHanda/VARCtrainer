@@ -84,7 +84,9 @@
                 </div>
             </div>
 
-            <div onclick="initSchulte()" class="bg-card border border-border p-4 rounded-2xl text-center hover:shadow-soft hover:border-accent transition-all cursor-pointer group relative top-0 hover:-top-1 flex flex-col items-center justify-center h-full">
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                <div onclick="initSchulte()" class="bg-card border border-border p-4 rounded-2xl text-center hover:shadow-soft hover:border-accent transition-all cursor-pointer group relative top-0 hover:-top-1 flex flex-col items-center justify-center h-full">
                     <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🔢</div>
                     <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1 group-hover:text-accent">Schulte Tables</div>
                     <div class="text-sm font-bold text-primary">Train Focus &rarr;</div>
@@ -95,18 +97,15 @@
                     <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1 group-hover:text-accent">Saccade Jumps</div>
                     <div class="text-sm font-bold text-primary">Train Eyes &rarr;</div>
                 </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-                
-                <a href="https://shivhanda.github.io/Sudoku/" target="_blank" class="bg-card border border-border p-4 rounded-2xl text-center hover:shadow-soft hover:border-accent transition-all group relative top-0 hover:-top-1 cursor-pointer flex flex-col items-center justify-center h-full">
-                    <div class="w-8 h-8 grid grid-cols-3 gap-1 mb-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                        <div class="bg-secondary rounded-[1px]"></div><div class="bg-secondary rounded-[1px]"></div><div class="bg-accent rounded-[1px]"></div>
-                        <div class="bg-secondary rounded-[1px]"></div><div class="bg-accent rounded-[1px]"></div><div class="bg-secondary rounded-[1px]"></div>
-                        <div class="bg-accent rounded-[1px]"></div><div class="bg-secondary rounded-[1px]"></div><div class="bg-secondary rounded-[1px]"></div>
+                <a href="https://shivhanda.github.io/Sudoku/" target="_blank" class="bg-card border border-border p-4 rounded-2xl text-center hover:shadow-soft hover:border-accent transition-all group relative top-0 hover:-top-1 cursor-pointer flex flex-col items-center justify-center h-32">
+                    <div class="w-8 h-8 grid grid-cols-3 gap-0.5 mb-2 border border-stone-300 p-0.5 rounded">
+                        <div class="bg-stone-300 rounded-[1px]"></div><div class="bg-orange-500 rounded-[1px]"></div><div class="bg-stone-300 rounded-[1px]"></div>
+                        <div class="bg-stone-300 rounded-[1px]"></div><div class="bg-stone-300 rounded-[1px]"></div><div class="bg-orange-500 rounded-[1px]"></div>
+                        <div class="bg-orange-500 rounded-[1px]"></div><div class="bg-stone-300 rounded-[1px]"></div><div class="bg-stone-300 rounded-[1px]"></div>
                     </div>
                     <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1 group-hover:text-accent transition-colors">Daily Sudoku</div>
                     <div class="text-sm font-bold text-primary group-hover:text-accent transition-colors">Play &rarr;</div>
                 </a>               
-
             </div>
 
             <h2 class="text-xl font-bold text-primary mb-6 flex items-center gap-3">
@@ -505,6 +504,7 @@
                 // Correct
                 cell.classList.remove('bg-bg', 'border-border');
                 cell.classList.add('bg-green-100', 'border-green-400', 'text-green-800');
+                setTimeout(() => cell.classList.remove('bg-green-100', 'border-green-400', 'text-green-800'), 200);
                 schulteNext++;
                 if (schulteNext > 25) {
                     clearInterval(schulteTimerInt);
@@ -573,19 +573,21 @@
             }
         }
         function switchView(id) {
-            // Add 'view-schulte' and 'view-saccade' to this list
             ['view-dashboard', 'view-reader', 'view-quiz', 'view-schulte', 'view-saccade'].forEach(v => document.getElementById(v).classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
+            if (id === 'view-schulte' || id === 'view-saccade') {
+                main.classList.add('no-scroll');
+            } else {
+                main.classList.remove('no-scroll');
+            }
             window.scrollTo(0,0);
         }
-
         function goHome() {
             stopRSVP();
-            stopSaccade(); // New
+            stopSaccade();
             clearInterval(timerInterval);
-            clearInterval(schulteTimerInt); // New
+            clearInterval(schulteTimerInt);
             switchView('view-dashboard');
-        }
     </script>
 </body>
 </html>
