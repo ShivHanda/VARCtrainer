@@ -33,6 +33,8 @@
                 }
             }
         }
+        .schulte-cell { transition: all 0.1s ease; user-select: none; }
+        .schulte-cell:active { transform: scale(0.95); }
     </script>
     <style>
         body { background-color: #FDFCF8; color: #4A3F35; }
@@ -82,6 +84,17 @@
                 </div>
             </div>
 
+            <div onclick="initSchulte()" class="bg-card border border-border p-4 rounded-2xl text-center hover:shadow-soft hover:border-accent transition-all cursor-pointer group relative top-0 hover:-top-1 flex flex-col items-center justify-center h-full">
+                    <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🔢</div>
+                    <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1 group-hover:text-accent">Schulte Tables</div>
+                    <div class="text-sm font-bold text-primary">Train Focus &rarr;</div>
+                </div>
+
+                <div onclick="initSaccade()" class="bg-card border border-border p-4 rounded-2xl text-center hover:shadow-soft hover:border-accent transition-all cursor-pointer group relative top-0 hover:-top-1 flex flex-col items-center justify-center h-full">
+                    <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">👀</div>
+                    <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1 group-hover:text-accent">Saccade Jumps</div>
+                    <div class="text-sm font-bold text-primary">Train Eyes &rarr;</div>
+                </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
                 
                 <a href="https://shivhanda.github.io/Sudoku/" target="_blank" class="bg-card border border-border p-4 rounded-2xl text-center hover:shadow-soft hover:border-accent transition-all group relative top-0 hover:-top-1 cursor-pointer flex flex-col items-center justify-center h-full">
@@ -92,19 +105,7 @@
                     </div>
                     <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1 group-hover:text-accent transition-colors">Daily Sudoku</div>
                     <div class="text-sm font-bold text-primary group-hover:text-accent transition-colors">Play &rarr;</div>
-                </a>
-                
-                <div class="bg-bg border border-border p-4 rounded-2xl text-center opacity-60 cursor-not-allowed flex flex-col items-center justify-center h-full">
-                    <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Schulte Tables</div>
-                    <div class="text-sm font-medium text-primary">Coming Soon</div>
-                </div>
-
-                <div class="bg-bg border border-border p-4 rounded-2xl text-center opacity-60 cursor-not-allowed flex flex-col items-center justify-center h-full">
-                     <div class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Saccade Jumps</div>
-                     <div class="text-sm font-medium text-primary">Coming Soon</div>
-                </div>
-
-                
+                </a>               
 
             </div>
 
@@ -160,6 +161,41 @@
             </div>
         </div>
 
+        <div id="view-schulte" class="hidden max-w-2xl mx-auto">
+            <div class="mb-6 flex justify-between items-center">
+                <button onclick="goHome()" class="text-secondary hover:text-primary">&larr; Dashboard</button>
+                <div class="font-mono text-xl font-bold text-accent" id="schulte-timer">0.00s</div>
+            </div>
+            
+            <div class="bg-card border border-border p-6 rounded-3xl shadow-soft">
+                <h2 class="text-center text-primary font-bold mb-4">Find numbers 1 to 25 in order</h2>
+                <div id="schulte-grid" class="grid grid-cols-5 gap-3 aspect-square max-w-md mx-auto">
+                    </div>
+            </div>
+            <div id="schulte-msg" class="text-center mt-6 text-xl font-bold text-accent h-8"></div>
+            <button onclick="initSchulte()" class="block mx-auto mt-6 px-6 py-2 bg-bg border border-border rounded-xl text-secondary hover:text-primary font-bold">Reset</button>
+        </div>
+
+        <div id="view-saccade" class="hidden max-w-4xl mx-auto">
+            <div class="mb-6 flex justify-between items-center">
+                <button onclick="goHome()" class="text-secondary hover:text-primary">&larr; Dashboard</button>
+                <div class="flex items-center gap-2 bg-card px-4 py-2 rounded-xl border border-border">
+                    <span class="text-xs font-bold text-secondary">SPEED</span>
+                    <input type="range" min="40" max="200" value="60" id="saccade-speed" class="w-32 h-1.5 bg-border rounded-full accent-accent">
+                </div>
+            </div>
+
+            <div class="bg-card border border-border rounded-3xl shadow-soft h-[60vh] relative flex items-center justify-between px-10 md:px-20 overflow-hidden">
+                <div id="sac-left" class="w-8 h-8 rounded-full bg-primary opacity-20 transition-opacity duration-100"></div>
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-secondary text-sm opacity-50">Keep head still, move eyes only</div>
+                <div id="sac-right" class="w-8 h-8 rounded-full bg-primary opacity-20 transition-opacity duration-100"></div>
+            </div>
+            
+            <div class="text-center mt-6">
+                <button onclick="toggleSaccade()" id="sac-btn" class="px-8 py-3 bg-accent text-white rounded-xl font-bold shadow-soft hover:bg-orange-600 transition">START</button>
+            </div>
+        </div>
+
         <div id="view-quiz" class="hidden max-w-3xl mx-auto">
             <div class="bg-card border border-border rounded-3xl p-8 mb-10 shadow-soft">
                 <h2 class="text-2xl font-bold text-primary mb-6 flex items-center gap-2">Performance Analysis</h2>
@@ -207,6 +243,13 @@
         let rsvpInterval;
         let rsvpWords = [];
         let rsvpIndex = 0;
+        // Schulte Vars
+        let schulteNext = 1;
+        let schulteStart = 0;
+        let schulteTimerInt;
+        // Saccade Vars
+        let saccadeInt;
+        let saccadeActive = false;
 
         window.addEventListener('DOMContentLoaded', async () => {
             try {
@@ -427,14 +470,120 @@
                 document.getElementById('dict-tooltip').style.display = 'none';
             }
         });
+        // --- SCHULTE TABLES LOGIC ---
+        function initSchulte() {
+            switchView('view-schulte');
+            schulteNext = 1;
+            document.getElementById('schulte-msg').innerText = "";
+            document.getElementById('schulte-timer').innerText = "0.00s";
+            clearInterval(schulteTimerInt);
+            
+            const grid = document.getElementById('schulte-grid');
+            grid.innerHTML = '';
+            
+            // Create array 1-25 and shuffle
+            let nums = Array.from({length: 25}, (_, i) => i + 1);
+            nums.sort(() => Math.random() - 0.5);
+
+            nums.forEach(n => {
+                const cell = document.createElement('div');
+                cell.className = "schulte-cell bg-bg border-2 border-border rounded-xl flex items-center justify-center text-2xl font-bold text-primary cursor-pointer hover:bg-card";
+                cell.innerText = n;
+                cell.onclick = () => handleSchulteClick(cell, n);
+                grid.appendChild(cell);
+            });
+
+            schulteStart = Date.now();
+            schulteTimerInt = setInterval(() => {
+                const diff = (Date.now() - schulteStart) / 1000;
+                document.getElementById('schulte-timer').innerText = diff.toFixed(2) + "s";
+            }, 50);
+        }
+
+        function handleSchulteClick(cell, num) {
+            if (num === schulteNext) {
+                // Correct
+                cell.classList.remove('bg-bg', 'border-border');
+                cell.classList.add('bg-green-100', 'border-green-400', 'text-green-800');
+                schulteNext++;
+                if (schulteNext > 25) {
+                    clearInterval(schulteTimerInt);
+                    document.getElementById('schulte-msg').innerText = "Complete!";
+                }
+            } else {
+                // Wrong
+                cell.classList.add('bg-red-100');
+                setTimeout(() => cell.classList.remove('bg-red-100'), 200);
+            }
+        }
+
+        // --- SACCADE JUMPS LOGIC ---
+        function initSaccade() {
+            switchView('view-saccade');
+            stopSaccade();
+        }
+
+        function toggleSaccade() {
+            if (saccadeActive) stopSaccade();
+            else startSaccade();
+        }
+
+        function startSaccade() {
+            saccadeActive = true;
+            document.getElementById('sac-btn').innerText = "STOP";
+            document.getElementById('sac-btn').classList.replace('bg-accent', 'bg-red-500');
+            
+            const speed = parseInt(document.getElementById('saccade-speed').value); // BPM
+            const interval = 60000 / speed;
+            let side = 0; // 0 left, 1 right
+
+            // Initial state
+            document.getElementById('sac-left').classList.replace('opacity-20', 'opacity-100');
+            
+            saccadeInt = setInterval(() => {
+                const l = document.getElementById('sac-left');
+                const r = document.getElementById('sac-right');
+                
+                if (side === 0) { // Switch to Right
+                    l.classList.replace('opacity-100', 'opacity-20');
+                    r.classList.replace('opacity-20', 'opacity-100');
+                    side = 1;
+                } else { // Switch to Left
+                    r.classList.replace('opacity-100', 'opacity-20');
+                    l.classList.replace('opacity-20', 'opacity-100');
+                    side = 0;
+                }
+            }, interval);
+        }
+
+        function stopSaccade() {
+            saccadeActive = false;
+            clearInterval(saccadeInt);
+            document.getElementById('sac-btn').innerText = "START";
+            document.getElementById('sac-btn').classList.replace('bg-red-500', 'bg-accent');
+            document.getElementById('sac-left').classList.replace('opacity-100', 'opacity-20');
+            document.getElementById('sac-right').classList.replace('opacity-100', 'opacity-20');
+        }
+        
+        // Update speed on the fly
+        document.getElementById('saccade-speed').oninput = function() {
+            if(saccadeActive) {
+                clearInterval(saccadeInt);
+                startSaccade();
+            }
+        }
         function switchView(id) {
-            ['view-dashboard', 'view-reader', 'view-quiz'].forEach(v => document.getElementById(v).classList.add('hidden'));
+            // Add 'view-schulte' and 'view-saccade' to this list
+            ['view-dashboard', 'view-reader', 'view-quiz', 'view-schulte', 'view-saccade'].forEach(v => document.getElementById(v).classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
             window.scrollTo(0,0);
         }
+
         function goHome() {
             stopRSVP();
+            stopSaccade(); // New
             clearInterval(timerInterval);
+            clearInterval(schulteTimerInt); // New
             switchView('view-dashboard');
         }
     </script>
