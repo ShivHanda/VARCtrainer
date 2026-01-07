@@ -182,9 +182,6 @@
                     <div class="text-accent font-mono text-xl mb-4" id="schulte-final-time">0.00s</div>
                     <button onclick="initSchulte()" class="px-6 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary/90">Play Again</button>
                 </div>
-            </div>
-            <div id="schulte-msg" class="text-center mt-4 text-lg font-bold text-accent h-6 shrink-0">Find 1</div>
-        </div>
 
         <div id="view-saccade" class="hidden flex flex-col h-[calc(100vh-6rem)]">
             <div class="mb-4 flex justify-between items-center shrink-0">
@@ -307,7 +304,6 @@
         function initSchulte() {
             switchView('view-schulte');
             schulteNext = 1;
-            document.getElementById('schulte-msg').innerText = "Find 1";
             document.getElementById('schulte-timer').innerText = "0.00s";
             document.getElementById('schulte-overlay').classList.add('hidden');
             document.getElementById('schulte-overlay').classList.remove('flex');
@@ -343,7 +339,6 @@
                 schulteNext++;
                 if (schulteNext > 25) {
                     clearInterval(schulteTimerInt);
-                    document.getElementById('schulte-msg').innerText = "Complete!";
                 }
             } else {
                 // Wrong
