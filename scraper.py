@@ -111,7 +111,7 @@ def generate_analysis_real(text_chunk):
     TASK:
     1. Identify the Author's Tone (e.g., Critical, Satirical, Informative, Acerbic).
     2. Write a 1-sentence Summary of this specific chunk.
-    3. Create 4 Reading Comprehension Questions (1 Inference, 1 Main Idea, 1 Detail).
+    3. Create 3 Reading Comprehension Questions (1 Inference, 1 Main Idea, 1 Detail).
     
     OUTPUT FORMAT (Strict JSON):
     {{
