@@ -15,7 +15,8 @@ if not GEMINI_API_KEY:
     exit(1)
 
 genai.configure(api_key=GEMINI_API_KEY)
-MODEL_NAME = 'gemini-2.0-flash-exp' 
+
+MODEL_NAME = 'gemini-2.5-flash' 
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -67,11 +68,10 @@ def get_smart_essay_selection():
         # 3. DECISION TIME
         if latest_essay['link'] == last_scraped_url:
             print("⚠️ Latest essay is same as yesterday. Switching to RANDOM mode.")
-            # Remove the latest one from candidates to avoid picking it again randomly
             if len(essay_candidates) > 1:
                 selected = random.choice(essay_candidates[1:])
             else:
-                selected = essay_candidates[0] # Fallback
+                selected = essay_candidates[0]
         else:
             print("✅ New essay detected! Fetching LATEST.")
             selected = latest_essay
@@ -102,6 +102,12 @@ def generate_analysis_real(text_chunk):
     print(f"Calling AI Model: {MODEL_NAME}...")
     model = genai.GenerativeModel(MODEL_NAME)
     
+    # --- FIX: STRICT JSON SCHEMA ---
+    # This configuration forces the model to return ONLY valid JSON.
+    generation_config = {
+        "response_mime_type": "application/json",
+    }
+
     prompt = f"""
     You are a CAT (Common Admission Test) Exam Setter. Analyze this text carefully.
     
@@ -113,27 +119,34 @@ def generate_analysis_real(text_chunk):
     2. Write a 1-sentence Summary of this specific chunk.
     3. Create 3 Reading Comprehension Questions (1 Inference, 1 Main Idea, 1 Detail).
     
-    OUTPUT FORMAT (Strict JSON):
+    Output must be a JSON object with this schema:
     {{
-        "tone": "One word tone",
-        "summary": "One sentence summary",
+        "tone": "String",
+        "summary": "String",
         "questions": [
             {{
-                "question": "...",
+                "question": "String",
                 "options": ["A", "B", "C", "D"],
-                "correct_index": 0,
-                "explanation": "..."
+                "correct_index": Integer (0-3),
+                "explanation": "String"
             }}
         ]
     }}
     """
+    
     try:
-        response = model.generate_content(prompt)
-        clean_text = re.sub(r"```json|```", "", response.text).strip()
-        data = json.loads(clean_text)
+        # Applying the config here
+        response = model.generate_content(prompt, generation_config=generation_config)
+        
+        # Now response.text is GUARANTEED to be JSON. No Regex needed.
+        data = json.loads(response.text)
         return data
+        
     except Exception as e:
         print(f"AI Gen Error: {e}")
+        # Print the raw text to see WHY it failed if it happens again
+        if 'response' in locals():
+            print(f"Raw Output: {response.text}") 
         return None
 
 def main():
@@ -167,7 +180,8 @@ def main():
         analysis = generate_analysis_real(chunk)
         
         if not analysis:
-            analysis = {"tone": "Analytical", "summary": "Analysis unavailable.", "questions": []}
+            print(f"⚠️ Warning: Analysis failed for chunk {i+1}")
+            analysis = {"tone": "Analytical", "summary": "Analysis unavailable due to AI error.", "questions": []}
 
         final_passages.append({
             "id": i+1,
@@ -176,7 +190,8 @@ def main():
             "summary": analysis.get("summary", "No summary available."),
             "questions": analysis.get("questions", [])
         })
-        time.sleep(4) 
+        # Sleep slightly longer to avoid rate limits
+        time.sleep(5) 
 
     data = {
         "metadata": {
