@@ -1,5 +1,5 @@
 # VARCtrainer
-VARC Training grund
+VARC Training ground -> <a href="https://shivhanda.github.io/VARCtrainer/">📚</a>
 
 
 
