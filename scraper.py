@@ -28,58 +28,35 @@ HEADERS = {
 }
 
 def get_smart_essay_selection():
-    """
-    Logic:
-    1. Scrape the main Aeon essays webpage directly (since RSS is dead).
-    2. Check 'data.json' to see what we scraped yesterday.
-    3. If Latest == Yesterday's -> Pick RANDOM.
-    4. If Latest != Yesterday's -> Pick LATEST.
-    """
     url = "https://aeon.co/essays"
     print(f"Checking Main Essays Page: {url}")
     
     try:
-        response = requests.get(url, headers=HEADERS, timeout=10)
+        response = requests.get(url, headers=HEADERS, timeout=15)
         
         if response.status_code != 200:
             print(f"ERROR: Aeon blocked request. Status: {response.status_code}")
-            sys.exit(1) 
+            return None, None
 
         soup = BeautifulSoup(response.content, 'html.parser')
         
-        # Find all hyperlink tags on the page
-        links = soup.find_all('a', href=True)
         essay_candidates = []
-
-        for a in links:
-            href = a['href']
-            # We only want actual essay links, ignoring author pages, tags, etc.
-            if '/essays/' in href and not any(x in href for x in ['/tag/', '/author/', '/topic/']):
-                
-                # Fix relative links
-                full_link = href if href.startswith('http') else "https://aeon.co" + href
-                
-                # Extract a readable title
+        
+        # 1. Scraping Logic: Look for headers that link to essays
+        for h in soup.find_all(['h2', 'h3']):
+            a = h.find('a', href=True)
+            if a and '/essays/' in a['href']:
+                full_link = a['href'] if a['href'].startswith('http') else "https://aeon.co" + a['href']
                 title = a.get_text(strip=True)
-                if len(title) < 10: 
-                    # If the link text is just an image or short string, extract from the URL slug
-                    title = full_link.split('/')[-1].replace('-', ' ').title()
-                
-                # Avoid duplicates
-                if len(title) > 5 and not any(e['link'] == full_link for e in essay_candidates):
-                    essay_candidates.append({
-                        "link": full_link,
-                        "title": title
-                    })
+                if not any(e['link'] == full_link for e in essay_candidates):
+                    essay_candidates.append({"link": full_link, "title": title})
         
         if not essay_candidates:
-            print("ERROR: No essays found on the page! HTML structure might have changed.")
-            sys.exit(1)
+            print("ERROR: Could not find essay links. Aeon might have changed layout.")
+            return None, None
 
-        # 1. Identify the absolute latest essay
+        # 2. Decision Time: Check what we scraped last time
         latest_essay = essay_candidates[0]
-        
-        # 2. Check what we scraped last time
         last_scraped_url = ""
         try:
             if os.path.exists('data.json'):
@@ -89,7 +66,7 @@ def get_smart_essay_selection():
         except Exception as e:
             print(f"Could not read previous data: {e}")
 
-        # 3. DECISION TIME
+        # 3. Logic: If Latest == Yesterday's -> Pick RANDOM, else LATEST
         if latest_essay['link'] == last_scraped_url:
             print("⚠️ Latest essay is same as yesterday. Switching to RANDOM mode.")
             if len(essay_candidates) > 1:
@@ -105,7 +82,7 @@ def get_smart_essay_selection():
 
     except Exception as e:
         print(f"CRITICAL: Scrape Logic Failed entirely: {e}")
-        sys.exit(1)
+        return None, None
 
 def scrape_text_from_url(url):
     print(f"Scraping Text: {url}")
