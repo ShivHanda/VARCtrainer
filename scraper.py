@@ -7,6 +7,7 @@ from datetime import datetime
 import time
 import re
 import random
+import sys
 
 # --- CONFIG ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -29,31 +30,51 @@ HEADERS = {
 def get_smart_essay_selection():
     """
     Logic:
-    1. Get Latest Essay from RSS.
+    1. Scrape the main Aeon essays webpage directly (since RSS is dead).
     2. Check 'data.json' to see what we scraped yesterday.
     3. If Latest == Yesterday's -> Pick RANDOM.
     4. If Latest != Yesterday's -> Pick LATEST.
     """
-    rss_url = "https://aeon.co/feed.rss"
-    print(f"Checking RSS Feed: {rss_url}")
+    url = "https://aeon.co/essays"
+    print(f"Checking Main Essays Page: {url}")
     
     try:
-        response = requests.get(rss_url, headers=HEADERS, timeout=10)
-        soup = BeautifulSoup(response.content, 'xml')
+        response = requests.get(url, headers=HEADERS, timeout=10)
         
-        items = soup.find_all('item')
+        if response.status_code != 200:
+            print(f"ERROR: Aeon blocked request. Status: {response.status_code}")
+            sys.exit(1) 
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Find all hyperlink tags on the page
+        links = soup.find_all('a', href=True)
         essay_candidates = []
 
-        for item in items:
-            link = item.link.text
-            if "/essays/" in link:
-                essay_candidates.append({
-                    "link": link,
-                    "title": item.title.text
-                })
+        for a in links:
+            href = a['href']
+            # We only want actual essay links, ignoring author pages, tags, etc.
+            if '/essays/' in href and not any(x in href for x in ['/tag/', '/author/', '/topic/']):
+                
+                # Fix relative links
+                full_link = href if href.startswith('http') else "https://aeon.co" + href
+                
+                # Extract a readable title
+                title = a.get_text(strip=True)
+                if len(title) < 10: 
+                    # If the link text is just an image or short string, extract from the URL slug
+                    title = full_link.split('/')[-1].replace('-', ' ').title()
+                
+                # Avoid duplicates
+                if len(title) > 5 and not any(e['link'] == full_link for e in essay_candidates):
+                    essay_candidates.append({
+                        "link": full_link,
+                        "title": title
+                    })
         
         if not essay_candidates:
-            return None, None
+            print("ERROR: No essays found on the page! HTML structure might have changed.")
+            sys.exit(1)
 
         # 1. Identify the absolute latest essay
         latest_essay = essay_candidates[0]
@@ -83,8 +104,8 @@ def get_smart_essay_selection():
         return selected['link'], selected['title']
 
     except Exception as e:
-        print(f"RSS Logic Failed: {e}")
-        return None, None
+        print(f"CRITICAL: Scrape Logic Failed entirely: {e}")
+        sys.exit(1)
 
 def scrape_text_from_url(url):
     print(f"Scraping Text: {url}")
