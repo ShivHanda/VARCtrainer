@@ -29,7 +29,7 @@ HEADERS = {
 
 def get_smart_essay_selection():
     url = "https://aeon.co/essays"
-    print(f"Checking Main Essays Page: {url}")
+    print(f"DEBUG: Extracting data from {url}")
     
     try:
         response = requests.get(url, headers=HEADERS, timeout=15)
@@ -38,50 +38,55 @@ def get_smart_essay_selection():
             print(f"ERROR: Aeon blocked request. Status: {response.status_code}")
             return None, None
 
-        soup = BeautifulSoup(response.content, 'html.parser')
+        # Content ko string mein lo
+        html_content = response.text
+        
+        # DEBUG: JSON blob dhoondhne ke liye Regex
+        # Aeon ka data 'nodes' array mein hota hai
+        match = re.search(r'"nodes":(\[.*?\])', html_content)
+        
+        if not match:
+            print("ERROR: Could not find JSON data blob in HTML.")
+            return None, None
+            
+        json_str = match.group(1)
+        articles = json.loads(json_str)
         
         essay_candidates = []
-        
-        # 1. Scraping Logic: Look for headers that link to essays
-        for h in soup.find_all(['h2', 'h3']):
-            a = h.find('a', href=True)
-            if a and '/essays/' in a['href']:
-                full_link = a['href'] if a['href'].startswith('http') else "https://aeon.co" + a['href']
-                title = a.get_text(strip=True)
-                if not any(e['link'] == full_link for e in essay_candidates):
-                    essay_candidates.append({"link": full_link, "title": title})
+        for item in articles:
+            # Aeon ke JSON mein slug hota hai
+            slug = item.get('slug', '')
+            title = item.get('title', '')
+            if slug:
+                full_link = f"https://aeon.co/essays/{slug}"
+                essay_candidates.append({"link": full_link, "title": title})
         
         if not essay_candidates:
-            print("ERROR: Could not find essay links. Aeon might have changed layout.")
+            print("ERROR: JSON parsed but no essays extracted.")
             return None, None
 
-        # 2. Decision Time: Check what we scraped last time
+        # 2. Decision Time (Ye purana logic hai)
         latest_essay = essay_candidates[0]
         last_scraped_url = ""
-        try:
-            if os.path.exists('data.json'):
-                with open('data.json', 'r') as f:
+        if os.path.exists('data.json'):
+            with open('data.json', 'r') as f:
+                try:
                     old_data = json.load(f)
                     last_scraped_url = old_data['metadata']['source']
-        except Exception as e:
-            print(f"Could not read previous data: {e}")
+                except: pass
 
-        # 3. Logic: If Latest == Yesterday's -> Pick RANDOM, else LATEST
         if latest_essay['link'] == last_scraped_url:
-            print("⚠️ Latest essay is same as yesterday. Switching to RANDOM mode.")
-            if len(essay_candidates) > 1:
-                selected = random.choice(essay_candidates[1:])
-            else:
-                selected = essay_candidates[0]
+            print("⚠️ Latest essay match detected. Picking random.")
+            selected = random.choice(essay_candidates[1:]) if len(essay_candidates) > 1 else latest_essay
         else:
-            print("✅ New essay detected! Fetching LATEST.")
+            print("✅ New essay detected.")
             selected = latest_essay
 
         print(f"Selected: {selected['title']}")
         return selected['link'], selected['title']
 
     except Exception as e:
-        print(f"CRITICAL: Scrape Logic Failed entirely: {e}")
+        print(f"CRITICAL: Scraping failed: {e}")
         return None, None
 
 def scrape_text_from_url(url):
